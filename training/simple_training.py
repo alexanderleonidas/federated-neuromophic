@@ -1,12 +1,7 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import datasets, transforms, models
-from torch.utils.data import DataLoader, SubsetRandomSampler
-import matplotlib.pyplot as plt
-import numpy as np
 from tqdm import tqdm
-from globals import device
+
+from utils.globals import device
 
 
 def batch_validation_training(model, optimizer, criterion, scheduler, train_loader, train_indices, validation_loader,
@@ -89,7 +84,7 @@ def batch_validation_training(model, optimizer, criterion, scheduler, train_load
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(model.state_dict(), 'best_model.pth')
+            torch.save(model.state_dict(), '../saved_models/best_model.pth')
 
         valid_losses.append(val_loss)
         valid_accuracies.append(val_acc)
@@ -104,53 +99,3 @@ def batch_validation_training(model, optimizer, criterion, scheduler, train_load
         scheduler.step()
 
     return train_losses, valid_losses, train_accuracies, valid_accuracies
-
-
-def evaluation(model, test_loader):
-    # Testing the model with progress bar
-    model.eval()
-    correct = 0
-    total = 0
-
-    # Initialize the progress bar for testing
-    test_progress_bar = tqdm(test_loader, desc='Testing', leave=False)
-
-    with torch.no_grad():
-        for images, labels in test_progress_bar:
-            images = images.to(device, non_blocking=True)
-            labels = labels.to(device, non_blocking=True)
-            outputs = model(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-            # Update progress bar with current accuracy
-            current_accuracy = 100 * correct / total
-            test_progress_bar.set_postfix({'Accuracy': f'{current_accuracy:.2f}%'})
-
-    test_accuracy = 100 * correct / total
-    print(f'Test Accuracy: {test_accuracy:.2f}%')
-
-
-def plot_learning_curve(num_epochs, train_losses, train_accuracies, valid_losses, valid_accuracies):
-    # Plot loss curves
-    plt.figure(figsize=(12, 5))
-    x = range(1, num_epochs + 1)
-    plt.subplot(1, 2, 1)
-    plt.plot(x, train_losses, label='Training Loss')
-    plt.plot(x, valid_losses, label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss vs. Epoch')
-    plt.legend()
-
-    # Plot accuracy curves
-    plt.subplot(1, 2, 2)
-    plt.plot(x, train_accuracies, label='Training Accuracy')
-    plt.plot(x, valid_accuracies, label='Validation Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy (%)')
-    plt.title('Accuracy vs. Epoch')
-    plt.legend()
-
-    plt.show()

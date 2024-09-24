@@ -1,12 +1,8 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import datasets, transforms, models
-from torch.utils.data import DataLoader, SubsetRandomSampler
-import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
-from globals import align_random_seeds, PATH_TO_ROOT
+from torch.utils.data import DataLoader, SubsetRandomSampler
+from torchvision import datasets, transforms
+
+from utils.globals import align_random_seeds, PATH_TO_ROOT
 
 
 def get_transform(img_size):
