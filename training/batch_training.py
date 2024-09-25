@@ -1,11 +1,20 @@
 import torch
 from tqdm import tqdm
 
-from utils.globals import device
+from training.training_scores import TrainingScores
+from utils.globals import device, MODEL_PATH
 
 
-def batch_validation_training(model, optimizer, criterion, scheduler, train_loader, train_indices, validation_loader,
-                              val_indices, num_epochs=3):
+def batch_validation_training(trainable, batches_dataset, num_epochs=3):
+    model = trainable.model
+    optimizer = trainable.optimizer
+    criterion = trainable.criterion
+    scheduler = trainable.scheduler
+
+    train_loader = batches_dataset.train_loader
+    train_indices = batches_dataset.train_indices
+    validation_loader = batches_dataset.validation_loader
+    val_indices = batches_dataset.val_indices
 
     train_losses = []
     valid_losses = []
@@ -39,6 +48,8 @@ def batch_validation_training(model, optimizer, criterion, scheduler, train_load
             # Backward and optimize
             loss.backward()
             optimizer.step()
+
+            # TODO: MOVE THESE STATISTICS TO Metrics CLASS
 
             # Statistics
             running_loss += loss.item() * images.size(0)
@@ -84,7 +95,7 @@ def batch_validation_training(model, optimizer, criterion, scheduler, train_load
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(model.state_dict(), '../saved_models/best_model.pth')
+            torch.save(model.state_dict(), MODEL_PATH)
 
         valid_losses.append(val_loss)
         valid_accuracies.append(val_acc)
@@ -98,4 +109,4 @@ def batch_validation_training(model, optimizer, criterion, scheduler, train_load
         # Step the scheduler
         scheduler.step()
 
-    return train_losses, valid_losses, train_accuracies, valid_accuracies
+    return TrainingScores(train_losses, valid_losses, train_accuracies, valid_accuracies)

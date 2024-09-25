@@ -2,10 +2,11 @@ import numpy as np
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import datasets, transforms
 
-from utils.globals import align_random_seeds, PATH_TO_ROOT
+from data.data_loader import Dataset
+from utils.globals import align_random_seeds, PATH_TO_ROOT, IMAGE_RESIZE
 
 
-def get_transform(img_size):
+def get_augmentation_transform(img_size=IMAGE_RESIZE):
     transform = transforms.Compose([
         transforms.Resize(img_size),  # Resize images
         transforms.RandomRotation(10),  # Rotate images by up to 10 degrees
@@ -18,35 +19,54 @@ def get_transform(img_size):
     return transform
 
 
+def get_transform(img_size=IMAGE_RESIZE):
+    transform = transforms.Compose([
+        transforms.Resize(img_size),  # Resize images
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,)),  # Normalize with MNIST mean and std
+        transforms.Lambda(lambda x: x.repeat(3, 1, 1))  # Convert 1-channel grayscale to 3-channel
+    ])
+    return transform
+
+
 def extract_mnist(transform):
     # Download and load the training and test datasets
     train_dataset = datasets.MNIST(root=PATH_TO_ROOT, train=True, download=True, transform=transform)
     test_dataset = datasets.MNIST(root=PATH_TO_ROOT, train=False, download=True, transform=transform)
-    return train_dataset, test_dataset
+    return Dataset(train_dataset, test_dataset)
 
 
-def load_data(validation_split=0.1, shuffle_dataset=True, transform=get_transform((32, 32))):
+def load_mnist_batches(validation_split=0.1, shuffle_dataset=True, transform=get_transform(), batch_size=128):
     align_random_seeds()
-    train_dataset, test_dataset = extract_mnist(transform)
+    dataset = extract_mnist(transform)
+    batches = BatchDataset(dataset, validation_split, batch_size, shuffle_dataset)
+    return batches
 
-    dataset_size = len(train_dataset)
-    indices = list(range(dataset_size))
-    split = int(np.floor(validation_split * dataset_size))
 
-    if shuffle_dataset:
-        np.random.shuffle(indices)
+class BatchDataset(Dataset):
+    def __init__(self, dataset, val_split_ratio, batch_size, shuffle):
+        super().__init__(dataset.training_set, dataset.testing_set)
+        self.val_split_ratio = val_split_ratio
+        self.train_indices, self.val_indices = self.validation_split(shuffle)
+        self.train_loader, self.validation_loader = self.split_batches(batch_size)
+        self.test_loader = DataLoader(self.testing_set, batch_size=batch_size, shuffle=False)
 
-    train_indices, val_indices = indices[split:], indices[:split]
+    def validation_split(self, shuffle):
+        dataset_size = len(self.training_set)
+        indices = list(range(dataset_size))
+        split = int(np.floor(self.val_split_ratio * dataset_size))
 
-    # Create data samplers and loaders
-    batch_size = 128
+        if shuffle:
+            np.random.shuffle(indices)
 
-    train_sampler = SubsetRandomSampler(train_indices)
-    valid_sampler = SubsetRandomSampler(val_indices)
+        train_indices, val_indices = indices[split:], indices[:split]
+        return train_indices, val_indices
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler)
-    validation_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=valid_sampler)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    def split_batches(self, batch_size):
 
-    return train_loader, train_indices, validation_loader, val_indices, test_loader
+        train_sampler = SubsetRandomSampler(self.train_indices)
+        valid_sampler = SubsetRandomSampler(self.val_indices)
 
+        train_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=train_sampler)
+        validation_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=valid_sampler)
+        return train_loader, validation_loader
