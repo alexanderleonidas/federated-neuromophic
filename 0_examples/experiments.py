@@ -37,9 +37,9 @@ def run_normal():
 
 def run_normal_federated():
     """Orchestrates the federated training process."""
-    num_clients = 4
+    num_clients = 3
     rounds = 1
-    epochs = 2
+    epochs = 1
 
     dataset = load_mnist_clients(num_clients)
 

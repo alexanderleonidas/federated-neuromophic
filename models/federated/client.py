@@ -1,7 +1,8 @@
+import copy
+
 from models.model_loader import Trainable
 from training.batch_training import batch_validation_training
 from utils.globals import get_standard_training_parameters
-import copy
 
 
 class Client:
