@@ -1,16 +1,18 @@
-from data.mnist_loader import get_augmentation_transform, load_mnist_batches
+from data.mnist_loader import load_mnist_batches, load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
-from models.model_loader import load_simple_model, load_resnet_model
+from models.federated.client import Client
+from models.federated.server import Server
+from models.model_loader import load_simple_model
 from training.batch_training import batch_validation_training
+from training.federated_training.federated_training import federated_training
 from utils.helpers import plot_learning_curve
-from utils.state import State
 
 
 def run_normal():
     # USING RESNET-18 ARCHITECTURE
 
     # batches_dataset = load_mnist_batches(transform=get_augmentation_transform((224, 224)))
-    # trainable = load_resnet_model(pretrained=False)    # NON PRETRAINED
+    # global_model = load_resnet_model(pretrained=False)    # NON PRETRAINED
 
     #
     # USING A SIMPLE CUSTOM-MADE MODEL
@@ -34,8 +36,23 @@ def run_normal():
 
 
 def run_normal_federated():
-    # TODO: at least this should be easy doable
-    pass
+    """Orchestrates the federated training process."""
+    num_clients = 4
+    rounds = 1
+    epochs = 2
+
+    dataset = load_mnist_clients(num_clients)
+
+    trainable_global = load_simple_model()
+    server = Server(trainable_global)
+    clients = [Client(trainable_global, client_loader) for client_loader in dataset.client_loaders]
+
+    round_results = federated_training(server, clients, rounds=rounds, epochs=epochs)
+
+    metrics = evaluate_outputs(server.global_model.model, dataset.test_loader)
+    final_metrics = metrics.get_results()
+
+    print(final_metrics)
 
 
 def run_neuromorphic():
@@ -48,4 +65,5 @@ def run_neuromorphic_federated():
     pass
 
 
-run_normal()
+# run_normal()
+run_normal_federated()

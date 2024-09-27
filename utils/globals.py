@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.optim as optim
 
 from utils.state import State
 
@@ -27,6 +29,13 @@ MODEL_PATH = f'../saved_models/{neuromorphic}_{federated}_model.pth'
 
 # IMAGES
 IMAGE_RESIZE = (32, 32)     # smaller means faster but harder to interpret
+
+
+def get_standard_training_parameters(model):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
+    return criterion, optimizer, scheduler
 
 
 def align_random_seeds(random_seed=69):

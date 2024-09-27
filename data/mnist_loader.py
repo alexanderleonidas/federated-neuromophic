@@ -1,5 +1,5 @@
 import numpy as np
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader, SubsetRandomSampler, random_split
 from torchvision import datasets, transforms
 
 from data.data_loader import Dataset
@@ -43,6 +43,13 @@ def load_mnist_batches(validation_split=0.1, shuffle_dataset=True, transform=get
     return batches
 
 
+def load_mnist_clients(num_clients, shuffle_dataset=True, transform=get_transform(), batch_size=128):
+    align_random_seeds()
+    dataset = extract_mnist(transform)
+    clients = ClientsDataset(dataset, num_clients, 0.1, batch_size, shuffle_dataset)
+    return clients
+
+
 class BatchDataset(Dataset):
     def __init__(self, dataset, val_split_ratio, batch_size, shuffle):
         super().__init__(dataset.training_set, dataset.testing_set)
@@ -63,10 +70,24 @@ class BatchDataset(Dataset):
         return train_indices, val_indices
 
     def split_batches(self, batch_size):
-
         train_sampler = SubsetRandomSampler(self.train_indices)
         valid_sampler = SubsetRandomSampler(self.val_indices)
 
         train_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=train_sampler)
         validation_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=valid_sampler)
         return train_loader, validation_loader
+
+
+class ClientsDataset(Dataset):
+    def __init__(self, dataset, num_clients, val_split_ratio, batch_size, shuffle):
+        super().__init__(dataset.training_set, dataset.testing_set)
+        self.num_clients = num_clients
+        self.val_split_ratio = val_split_ratio
+        self.batch_size = batch_size
+        self.client_loaders = self.split_clients(dataset, self.num_clients, shuffle)
+        self.test_loader = DataLoader(dataset.testing_set, batch_size=batch_size, shuffle=False)
+
+    def split_clients(self, dataset, num_clients, shuffle):
+        client_sets = random_split(self.training_set, [len(self.training_set) // num_clients] * num_clients)
+        client_ds = [Dataset(cs, dataset.testing_set) for cs in client_sets]
+        return [BatchDataset(cds, self.val_split_ratio, self.batch_size, shuffle) for cds in client_ds]

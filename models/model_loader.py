@@ -1,9 +1,8 @@
 import torch.nn as nn
-import torch.optim as optim
 from torchvision import models
 
 from models.simple_CNN_model import SimpleCNN
-from utils.globals import device, IMAGE_RESIZE
+from utils.globals import device, IMAGE_RESIZE, get_standard_training_parameters
 
 
 class Trainable:
@@ -24,16 +23,12 @@ def load_resnet_model(pretrained=False):
 
     # Move the model to the appropriate device
     model = model.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
+    criterion, optimizer, scheduler = get_standard_training_parameters(model)
     return Trainable(model, criterion, optimizer, scheduler)
 
 
 def load_simple_model(img_size=IMAGE_RESIZE):
     model = SimpleCNN(img_size).to(device)
     # Move the model to the appropriate device
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
+    criterion, optimizer, scheduler = get_standard_training_parameters(model)
     return Trainable(model, criterion, optimizer, scheduler)

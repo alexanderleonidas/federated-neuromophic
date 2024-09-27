@@ -1,7 +1,5 @@
-from typing import List, Any
-
-from sklearn.metrics import precision_score, recall_score, f1_score
 import torch
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 
 class Metrics:
