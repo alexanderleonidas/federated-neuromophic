@@ -17,7 +17,7 @@ class Server:
         # Update the global model with aggregated weights
         self.global_model.model.load_state_dict(global_weights)
 
-    def aggregate_fedma(self, client_weights):
+    def aggregate_fedma(self, clients):
 
         pass
 

@@ -8,7 +8,6 @@ def federated_training(server, clients, rounds, epochs):
     for round_num in range(rounds):
         print(f"Round {round_num + 1} of federated learning")
 
-        client_weights = []
         client_metrics = {i: [] for i, _ in enumerate(clients)}
 
         for i, client in enumerate(clients):
@@ -16,10 +15,7 @@ def federated_training(server, clients, rounds, epochs):
             client_scores = client.local_train(epochs)
             client_metrics.get(i).append(client_scores)
 
-            updated_weights = client.get_model_weights()
-            client_weights.append(updated_weights)
-
-        global_weights = server_aggregation(server, client_weights)
+        global_weights = server_aggregation(server, clients)
 
         for client in clients:
             client.set_model_weights(global_weights)
