@@ -1,8 +1,8 @@
-# federated-neuromophic
-This is a project that will explore the use of neurotrophic learning for privacy aware federated learning
+# Stochastic Neuromorphic Learning for Privacy-aware Federated Learning
+This repository complements the research conducted at the DACS department of Maastricht University. 
 
 
-## Everyone:
-Change the path in globals.py where you have MNIST downloaded
+## Instructions for use:
+  1. Change the path in globals.py where you have MNIST downloaded
 
 ## Project Structure

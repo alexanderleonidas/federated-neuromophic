@@ -7,8 +7,18 @@ import torch.optim as optim
 from utils.state import State
 
 # HARDWARE
-cudnn.benchmark = True
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if not torch.backends.mps.is_available():
+    if not torch.backends.mps.is_built():
+        print("MPS not available because the current PyTorch install was not "
+              "built with MPS enabled.")
+    else:
+        print("MPS not available because the current MacOS version is not 12.3+ "
+              "and/or you do not have an MPS-enabled device on this machine.")
+    
+    cudnn.benchmark = True
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+else:
+    device = torch.device("mps")
 
 
 # DATA
