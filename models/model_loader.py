@@ -1,8 +1,10 @@
 import torch.nn as nn
 from torchvision import models
 
+from models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.simple_CNN_model import SimpleCNN
-from utils.globals import device, IMAGE_RESIZE, get_standard_training_parameters
+from utils.globals import device, IMAGE_RESIZE, get_standard_training_parameters, NEUROMORPHIC_METHOD, \
+    PERTURBATION_BASED, FEEDBACK_ALIGNMENT
 
 
 class Trainable:
@@ -29,6 +31,19 @@ def load_resnet_model(pretrained=False):
 
 def load_simple_model(img_size=IMAGE_RESIZE):
     model = SimpleCNN(img_size).to(device)
+    # Move the model to the appropriate device
+    criterion, optimizer, scheduler = get_standard_training_parameters(model)
+    return Trainable(model, criterion, optimizer, scheduler)
+
+
+def load_simple_neuromorphic_model(img_size=IMAGE_RESIZE, method=NEUROMORPHIC_METHOD):
+    if method == PERTURBATION_BASED:
+        model = SimpleCNN(img_size).to(device)
+    elif method == FEEDBACK_ALIGNMENT:
+        model = FeedbackAlignmentCNN(img_size).to(device)
+    else:
+        raise Exception('Non valid method, unable to load model')
+
     # Move the model to the appropriate device
     criterion, optimizer, scheduler = get_standard_training_parameters(model)
     return Trainable(model, criterion, optimizer, scheduler)

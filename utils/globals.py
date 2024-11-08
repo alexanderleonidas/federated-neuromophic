@@ -28,13 +28,18 @@ MODEL_PATH = f'../saved_models/{neuromorphic}_{federated}_model.pth'
 
 
 # IMAGES
-IMAGE_RESIZE = (32, 32)     # smaller means faster but harder to interpret
+IMAGE_RESIZE = (64, 64)     # smaller means faster but harder to interpret
+
+
+PERTURBATION_BASED = 'pb'
+FEEDBACK_ALIGNMENT = 'fa'
+NEUROMORPHIC_METHOD = PERTURBATION_BASED
 
 
 def get_standard_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
+    optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.05)
     return criterion, optimizer, scheduler
 
 

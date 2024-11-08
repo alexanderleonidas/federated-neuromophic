@@ -37,14 +37,14 @@ def extract_mnist(transform):
 
 
 def load_mnist_batches(validation_split=0.1, shuffle_dataset=True, transform=get_transform(), batch_size=128):
-    align_random_seeds()
+    # align_random_seeds()
     dataset = extract_mnist(transform)
     batches = BatchDataset(dataset, validation_split, batch_size, shuffle_dataset)
     return batches
 
 
 def load_mnist_clients(num_clients, shuffle_dataset=True, transform=get_transform(), batch_size=128):
-    align_random_seeds()
+    # align_random_seeds()
     dataset = extract_mnist(transform)
     clients = ClientsDataset(dataset, num_clients, 0.1, batch_size, shuffle_dataset)
     return clients

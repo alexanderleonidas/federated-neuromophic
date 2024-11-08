@@ -2,9 +2,12 @@ from data.mnist_loader import load_mnist_batches, load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
 from models.federated.client import Client
 from models.federated.server import Server
-from models.model_loader import load_simple_model
+from models.model_loader import load_simple_model, load_simple_neuromorphic_model
 from training.batch_training import batch_validation_training
+from training.neuromorphic.feedback_alignment import feedback_alignment_learning
 from training.federated_training.federated_training import federated_training
+from training.neuromorphic.neuromorphic_training import neuromorphic_training
+from utils.globals import PERTURBATION_BASED, FEEDBACK_ALIGNMENT
 from utils.helpers import plot_learning_curve
 
 
@@ -55,9 +58,39 @@ def run_normal_federated():
     print(final_metrics)
 
 
-def run_neuromorphic():
-    # TODO: for this we need some references
-    pass
+def run_neuromorphic_pb():
+    method = PERTURBATION_BASED
+
+    batches_dataset = load_mnist_batches()
+    trainable = load_simple_neuromorphic_model(method=method)
+    num_epochs = 15
+    training_scores = neuromorphic_training(trainable, batches_dataset, method=method, num_epochs=num_epochs)
+    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
+    final_metrics = metrics.get_results()
+
+    print(f"Test Accuracy: {final_metrics['accuracy']:.2f}%")
+    print(f"Precision: {final_metrics['precision']:.2f}%")
+    print(f"Recall: {final_metrics['recall']:.2f}%")
+    print(f"F1 Score: {final_metrics['f1_score']:.2f}%")
+
+    plot_learning_curve(num_epochs, training_scores)
+
+
+def run_neuromorphic_fa():
+    method = FEEDBACK_ALIGNMENT
+    batches_dataset = load_mnist_batches(batch_size=512)
+    trainable = load_simple_neuromorphic_model(method=method)
+    num_epochs = 5
+    training_scores = neuromorphic_training(trainable, batches_dataset, method=method, num_epochs=num_epochs)
+    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
+    final_metrics = metrics.get_results()
+
+    print(f"Test Accuracy: {final_metrics['accuracy']:.2f}%")
+    print(f"Precision: {final_metrics['precision']:.2f}%")
+    print(f"Recall: {final_metrics['recall']:.2f}%")
+    print(f"F1 Score: {final_metrics['f1_score']:.2f}%")
+
+    plot_learning_curve(num_epochs, training_scores)
 
 
 def run_neuromorphic_federated():
@@ -66,4 +99,6 @@ def run_neuromorphic_federated():
 
 
 # run_normal()
-run_normal_federated()
+# run_normal_federated()
+# run_neuromorphic_pb()
+run_neuromorphic_fa()
