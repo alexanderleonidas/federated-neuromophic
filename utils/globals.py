@@ -19,12 +19,16 @@ if not torch.backends.mps.is_available():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 else:
     device = torch.device("mps")
+    print("MPS is available and enabled on this device.")
 
+# TRAINING PARAMETERS
+MAX_EPOCHS = 2
+NUM_CLASSES = 10
 
 # DATA
-PATH_TO_ROOT = 'D:\\MNIST_DATA'
-PATH_TO_MNIST = PATH_TO_ROOT + '\\MNIST'
-PATH_TO_N_MNIST = PATH_TO_ROOT + '\\N_MNIST'
+PATH_TO_ROOT = 'MNIST_DATA/'
+PATH_TO_MNIST = PATH_TO_ROOT + 'MNIST'
+PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
 
 
 # STATE
