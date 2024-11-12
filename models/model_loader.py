@@ -29,8 +29,11 @@ def load_resnet_model(pretrained=False):
     return Trainable(model, criterion, optimizer, scheduler)
 
 
-def load_simple_model(img_size=IMAGE_RESIZE):
-    model = SimpleCNN(img_size).to(device)
+def load_simple_model(saved_model = None,img_size=IMAGE_RESIZE):
+    if saved_model is not None:
+        model = saved_model
+    else:
+        model = SimpleCNN(img_size).to(device)
     # Move the model to the appropriate device
     criterion, optimizer, scheduler = get_standard_training_parameters(model)
     return Trainable(model, criterion, optimizer, scheduler)
