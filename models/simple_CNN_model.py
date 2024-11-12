@@ -30,7 +30,7 @@ class SimpleCNN(nn.Module):
             n_size = x.size(1)
         return n_size
 
-    def forward(self, x):
+    def forward(self, x, **kwargs):
         x = self.pool(F.relu(self.bn1(self.conv1(x))))
         x = self.pool(F.relu(self.bn2(self.conv2(x))))
         x = self.dropout(x)
