@@ -22,7 +22,7 @@ else:
 
 
 # DATA
-PATH_TO_ROOT = 'D:\\MNIST_DATA'
+PATH_TO_ROOT = 'C:\\PYTHON\\federated-neuromophic\\MNIST_DATA'
 PATH_TO_MNIST = PATH_TO_ROOT + '\\MNIST'
 PATH_TO_N_MNIST = PATH_TO_ROOT + '\\N_MNIST'
 
