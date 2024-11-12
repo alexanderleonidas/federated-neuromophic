@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch.fx.passes.infra.pass_manager import pass_result_wrapper
 from torchvision import models
 
 from models.simple_CNN_FA_model import FeedbackAlignmentCNN
@@ -14,6 +15,12 @@ class Trainable:
         self.optimizer = optimizer
         self.scheduler = scheduler
 
+
+def load_neural_model():
+    # model =
+    # model = model.to(device)
+    # criterion, optimizer, scheduler =
+    pass
 
 def load_resnet_model(pretrained=False):
     # Load a non-pretrained ResNet18 model for its architecture ** works with images (224,224) **

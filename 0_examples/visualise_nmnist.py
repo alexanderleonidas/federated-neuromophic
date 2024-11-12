@@ -6,7 +6,8 @@ from PIL import Image
 from numpy import ndarray
 from typing import Dict
 from tqdm import tqdm
-from utils.globals import  PATH_TO_N_MNIST, rng
+from utils.globals import  PATH_TO_N_MNIST
+import numpy.random as rng
 
 """
 Visualise the N-MNIST dataset as a gif

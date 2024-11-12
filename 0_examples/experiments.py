@@ -98,7 +98,7 @@ def run_neuromorphic_federated():
     pass
 
 
-# run_normal()
+run_normal()
 # run_normal_federated()
 # run_neuromorphic_pb()
-run_neuromorphic_fa()
+# run_neuromorphic_fa()
