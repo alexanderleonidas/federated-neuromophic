@@ -1,6 +1,7 @@
-from tqdm import tqdm
-from utils.globals import device
 import torch
+from tqdm import tqdm
+
+from utils.globals import device
 
 
 def perturbation_based_learning(trainable, data_loader, data_indices, epsilon=0.05, learning_rate=0.01):

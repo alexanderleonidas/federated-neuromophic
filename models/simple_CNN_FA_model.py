@@ -1,6 +1,5 @@
 import torch
 import torch.nn.functional as F
-from torch import nn
 
 from models.simple_CNN_model import SimpleCNN
 from utils.globals import IMAGE_RESIZE

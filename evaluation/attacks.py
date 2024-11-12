@@ -1,19 +1,21 @@
+import copy
+
+import numpy as np
 import skorch
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from jinja2.optimizer import optimize
 from mia.estimators import AttackModelBundle, ShadowModelBundle, prepare_attack_data
 from sklearn.metrics import classification_report
-import numpy as np
-import torch.nn as nn
-import torch
-import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
-import copy
-from utils.globals import MAX_EPOCHS, NUM_CLASSES
 
+from utils.globals import MAX_EPOCHS, NUM_CLASSES
 
 SHADOW_DATASET_SIZE = 2500
 ATTACK_TEST_DATASET_SIZE = 5000
 TARGET_EPOCH = 12
-ATTACK_EPOCH = 12
+ATTACK_EPOCH = 100
 NUM_SHADOWS = 2
 
 torch.set_default_dtype(torch.float32)
@@ -21,7 +23,9 @@ class AttackModel(nn.Module):
         def __init__(self):
             super().__init__()
             self.fc1 = nn.Linear(NUM_CLASSES, 128)
+            self.d1 = nn.Dropout(0.3)
             self.fc2 = nn.Linear(128, 64)
+            self.d2 = nn.Dropout(0.2)
             self.fc3 = nn.Linear(64, 64)
             self.softmax = nn.Linear(64, 1)
 
@@ -91,7 +95,7 @@ def mia_attack(data_train, data_test, untrained, trained):
     y_shadow = y_shadow.reshape(-1, 1)
     print("Training the attack models...")
     amb.fit(
-        X_shadow, y_shadow, fit_kwargs=dict(epochs=ATTACK_EPOCH, verbose=True)
+        X_shadow, y_shadow, fit_kwargs=dict(epochs=ATTACK_EPOCH, verbose=False, optimizer=torch.optim.Adam, optimizer__params={"lr": 0.01, 'weight_decay': 1e-4}),
     )
 
     data_in = (X_train[:ATTACK_TEST_DATASET_SIZE], y_train[:ATTACK_TEST_DATASET_SIZE])
