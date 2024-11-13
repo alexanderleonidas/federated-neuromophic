@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, SubsetRandomSampler, random_split
 from torchvision import datasets, transforms
 
 from data.data_loader import Dataset
-from utils.globals import align_random_seeds, PATH_TO_ROOT, IMAGE_RESIZE
+from utils.globals import PATH_TO_ROOT, IMAGE_RESIZE
 
 
 def get_augmentation_transform(img_size=IMAGE_RESIZE):

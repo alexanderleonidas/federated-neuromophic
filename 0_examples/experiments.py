@@ -4,7 +4,6 @@ from models.federated.client import Client
 from models.federated.server import Server
 from models.model_loader import load_simple_model, load_simple_neuromorphic_model
 from training.batch_training import batch_validation_training
-from training.neuromorphic.feedback_alignment import feedback_alignment_learning
 from training.federated_training.federated_training import federated_training
 from training.neuromorphic.neuromorphic_training import neuromorphic_training
 from utils.globals import PERTURBATION_BASED, FEEDBACK_ALIGNMENT

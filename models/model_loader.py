@@ -1,6 +1,7 @@
+import torch
 import torch.nn as nn
-from torch.fx.passes.infra.pass_manager import pass_result_wrapper
 from torchvision import models
+import os
 
 from models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.simple_CNN_model import SimpleCNN
@@ -36,11 +37,11 @@ def load_resnet_model(pretrained=False):
     return Trainable(model, criterion, optimizer, scheduler)
 
 
-def load_simple_model(saved_model = None,img_size=IMAGE_RESIZE):
-    if saved_model is not None:
-        model = saved_model
-    else:
-        model = SimpleCNN(img_size).to(device)
+def load_simple_model(saved_model_file='', img_size=IMAGE_RESIZE):
+    model = SimpleCNN(img_size).to(device)
+    if os.path.exists(saved_model_file):
+        model.load_state_dict(torch.load(saved_model_file))
+        print('Loaded Saved Model from ', saved_model_file)
     # Move the model to the appropriate device
     criterion, optimizer, scheduler = get_standard_training_parameters(model)
     return Trainable(model, criterion, optimizer, scheduler)
