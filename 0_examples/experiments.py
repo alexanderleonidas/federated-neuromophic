@@ -1,96 +1,87 @@
 from data.mnist_loader import load_mnist_batches, load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
-from models.federated.client import Client
-from models.federated.server import Server
-from models.model_loader import load_simple_model, load_simple_neuromorphic_model
-from training.batch_training import batch_validation_training
-from training.neuromorphic.feedback_alignment import feedback_alignment_learning
-from training.federated_training.federated_training import federated_training
-from training.neuromorphic.neuromorphic_training import neuromorphic_training
-from utils.globals import PERTURBATION_BASED, FEEDBACK_ALIGNMENT
-from utils.helpers import plot_learning_curve
+from models.federated_trainable import FederatedTrainable
+from models.single_trainable import Trainable
+from training.federated_model_trainer import FederatedTrainer
+from training.single_model_trainer import Trainer
+from utils.globals import pb, fa, NUM_CLIENTS
+from utils.plotting import plot_learning_curve, plot_clients_learning_curves, plot_server_round_scores
+from utils.state import State
 
 
-def run_normal():
-    # USING RESNET-18 ARCHITECTURE
+def run_normal_single():
+    state = State(federated=False, neuromorphic=False, method='backprop', save_model=True)
 
-    # batches_dataset = load_mnist_batches(transform=get_augmentation_transform((224, 224)))
-    # global_model = load_resnet_model(pretrained=False)    # NON PRETRAINED
+    batches_mnist_dataset = load_mnist_batches()
+    trainable = Trainable(state=state)
+    trainer = Trainer(trainable=trainable, dataset=batches_mnist_dataset, state=state)
 
-    #
-    # USING A SIMPLE CUSTOM-MADE MODEL
 
-    batches_dataset = load_mnist_batches()
-    trainable = load_simple_model()
+    trainer.train_model()
 
-    num_epochs = 2
-    training_scores = batch_validation_training(trainable, batches_dataset, num_epochs=num_epochs)
-
-    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
+    metrics = evaluate_outputs(trainable.model, batches_mnist_dataset.test_loader)
 
     final_metrics = metrics.get_results()
+    metrics.print_results(final_metrics)
 
-    print(f"Test Accuracy: {final_metrics['accuracy']:.2f}%")
-    print(f"Precision: {final_metrics['precision']:.2f}%")
-    print(f"Recall: {final_metrics['recall']:.2f}%")
-    print(f"F1 Score: {final_metrics['f1_score']:.2f}%")
+    plot_learning_curve(trainer.training_scores)
 
-    plot_learning_curve(num_epochs, training_scores)
+
+
 
 
 def run_normal_federated():
     """Orchestrates the federated training process."""
-    num_clients = 3
-    rounds = 1
-    epochs = 1
+    clients_dataset = load_mnist_clients(NUM_CLIENTS)
 
-    dataset = load_mnist_clients(num_clients)
+    state = State(federated=True, fed_type='entire', neuromorphic=False, method='backprop', save_model=True)
 
-    trainable_global = load_simple_model()
-    server = Server(trainable_global)
-    clients = [Client(trainable_global, client_loader) for client_loader in dataset.client_loaders]
+    trainable = FederatedTrainable(state=state)
+    trainer = FederatedTrainer(trainable=trainable, dataset=clients_dataset, state=state)
 
-    round_results = federated_training(server, clients, rounds=rounds, epochs=epochs)
+    trainer.train_model()
 
-    metrics = evaluate_outputs(server.global_model.model, dataset.test_loader)
+    metrics = evaluate_outputs(trainer.global_model, clients_dataset.test_loader)
     final_metrics = metrics.get_results()
+    metrics.print_results(final_metrics)
 
-    print(final_metrics)
+    plot_clients_learning_curves(trainer.training_scores)
+    plot_server_round_scores(trainer.round_scores)
 
 
-def run_neuromorphic_pb():
-    method = PERTURBATION_BASED
+def run_neuromorphic_pb_single():
+    method = pb
+    state = State(federated=False, neuromorphic=True, method=method)
 
     batches_dataset = load_mnist_batches()
-    trainable = load_simple_neuromorphic_model(method=method)
-    num_epochs = 15
-    training_scores = neuromorphic_training(trainable, batches_dataset, method=method, num_epochs=num_epochs)
+
+    trainable = Trainable(state=state)
+    trainer = Trainer(trainable= trainable, dataset=batches_dataset, state=state)
+    trainer.train_model()
+
+    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
+
+    final_metrics = metrics.get_results()
+    metrics.print_results(final_metrics)
+
+    plot_learning_curve(trainer.training_scores)
+
+
+def run_neuromorphic_fa_single():
+    method = fa
+    state = State(federated=False, neuromorphic=True, method=method)
+
+    batches_dataset = load_mnist_batches()
+
+    trainable = Trainable(state=state)
+    trainer = Trainer(trainable=trainable, dataset=batches_dataset, state=state)
+    trainer.train_model()
+
     metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
     final_metrics = metrics.get_results()
+    metrics.print_results(final_metrics)
 
-    print(f"Test Accuracy: {final_metrics['accuracy']:.2f}%")
-    print(f"Precision: {final_metrics['precision']:.2f}%")
-    print(f"Recall: {final_metrics['recall']:.2f}%")
-    print(f"F1 Score: {final_metrics['f1_score']:.2f}%")
-
-    plot_learning_curve(num_epochs, training_scores)
-
-
-def run_neuromorphic_fa():
-    method = FEEDBACK_ALIGNMENT
-    batches_dataset = load_mnist_batches(batch_size=512)
-    trainable = load_simple_neuromorphic_model(method=method)
-    num_epochs = 5
-    training_scores = neuromorphic_training(trainable, batches_dataset, method=method, num_epochs=num_epochs)
-    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
-    final_metrics = metrics.get_results()
-
-    print(f"Test Accuracy: {final_metrics['accuracy']:.2f}%")
-    print(f"Precision: {final_metrics['precision']:.2f}%")
-    print(f"Recall: {final_metrics['recall']:.2f}%")
-    print(f"F1 Score: {final_metrics['f1_score']:.2f}%")
-
-    plot_learning_curve(num_epochs, training_scores)
+    plot_learning_curve(trainer.training_scores)
 
 
 def run_neuromorphic_federated():
@@ -98,7 +89,7 @@ def run_neuromorphic_federated():
     pass
 
 
-run_normal()
+# run_normal_single()
 # run_normal_federated()
-# run_neuromorphic_pb()
-# run_neuromorphic_fa()
+run_neuromorphic_pb_single()
+# run_neuromorphic_fa_single()

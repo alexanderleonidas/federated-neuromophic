@@ -1,13 +1,15 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import os
 import io
+import os
+from typing import Dict
+
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy.random as rng
 from PIL import Image
 from numpy import ndarray
-from typing import Dict
 from tqdm import tqdm
-from utils.globals import  PATH_TO_N_MNIST
-import numpy.random as rng
+
+from utils.globals import PATH_TO_N_MNIST
 
 """
 Visualise the N-MNIST dataset as a gif

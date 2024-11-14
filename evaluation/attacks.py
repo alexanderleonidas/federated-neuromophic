@@ -1,14 +1,15 @@
+import copy
+
+import numpy as np
 import skorch
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from mia.estimators import AttackModelBundle, ShadowModelBundle, prepare_attack_data
 from sklearn.metrics import classification_report
-import numpy as np
-import torch.nn as nn
-import torch
-import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
-import copy
-from utils.globals import MAX_EPOCHS, NUM_CLASSES
 
+from utils.globals import MAX_EPOCHS, NUM_CLASSES
 
 SHADOW_DATASET_SIZE = 2500
 ATTACK_TEST_DATASET_SIZE = 5000

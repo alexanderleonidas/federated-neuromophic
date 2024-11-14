@@ -1,21 +1,21 @@
-import copy
-
-from models.model_loader import Trainable
-from training.batch_training import batch_validation_training
-from utils.globals import get_standard_training_parameters
+from models.single_trainable import Trainable
+from training.single_backprop_training.batch_validation_training import batch_validation_training
+from utils.state import State
 
 
 class Client:
-    def __init__(self, global_model, dataset):
-        self.global_model = global_model
-        local_network = copy.deepcopy(self.global_model.model)
-        criterion, optimizer, scheduler = get_standard_training_parameters(local_network)
-        self.local_model = Trainable(local_network, criterion, optimizer, scheduler)
-        self.dataset = dataset
+    def __init__(self, state):
+        self.state = State(
+            federated=False,      # supposedly it was True, now has to be false to make it work single model
+            fed_type='client',
+            neuromorphic=state.neuromorphic,
+            method=state.method
+        )
+        self.local_model = Trainable(state=self.state)
 
-    def local_train(self, epochs):
+    def local_train(self, dataset, epochs):
         """Trains the model on the client's local data."""
-        training_scores = batch_validation_training(self.local_model, self.dataset, num_epochs=epochs)
+        training_scores = batch_validation_training(self.local_model, dataset, num_epochs=epochs)
         return training_scores
 
     def get_model_weights(self):

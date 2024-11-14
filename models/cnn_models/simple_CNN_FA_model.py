@@ -1,8 +1,7 @@
 import torch
 import torch.nn.functional as F
-from torch import nn
 
-from models.simple_CNN_model import SimpleCNN
+from models.cnn_models.simple_CNN_model import SimpleCNN
 from utils.globals import IMAGE_RESIZE
 
 
@@ -13,7 +12,7 @@ class FeedbackAlignmentCNN(SimpleCNN):
         self.register_buffer('B_fc2', torch.randn(self.fc2.weight.size()))
         self.register_buffer('B_fc1', torch.randn(self.fc1.weight.size()))
 
-    def forward(self, x):
+    def forward(self, x, **kwargs):
         # Store activations and pre-activations for use in backward pass
         self.x = x
         self.z1 = self.conv1(x)
