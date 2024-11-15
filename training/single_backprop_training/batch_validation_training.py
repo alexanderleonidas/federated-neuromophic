@@ -4,7 +4,7 @@ from data.dataset_loader import BatchDataset
 from evaluation.evaluation import run_epoch
 from models.single_trainable import Trainable
 from training.training_watcher import TrainingWatcher
-from utils.globals import MODEL_PATH, MAX_EPOCHS
+from utils.globals import MAX_EPOCHS, get_model_path
 
 
 def batch_validation_training(trainable: Trainable, batches_dataset: BatchDataset, num_epochs=MAX_EPOCHS):
@@ -26,7 +26,7 @@ def batch_validation_training(trainable: Trainable, batches_dataset: BatchDatase
 
         # Save the model if validation accuracy improves
         if training_scores.is_best_accuracy() and trainable.state.save_model:
-            torch.save(trainable.model.state_dict(), MODEL_PATH)
+            torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
         # Print epoch statistics
         print(f'Epoch [{epoch + 1}/{num_epochs}]')

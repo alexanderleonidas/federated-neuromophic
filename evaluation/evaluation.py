@@ -53,7 +53,7 @@ def run_epoch(trainable, data_loader, data_indices, mode='train'):
     total = 0
 
     progress_desc = 'Training' if mode == 'train' else 'Validation'
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=False)
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True)
 
     with torch.set_grad_enabled(mode == 'train'):  # Only compute gradients during training
         for images, labels in progress_bar:

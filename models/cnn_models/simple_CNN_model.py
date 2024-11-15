@@ -20,6 +20,19 @@ class SimpleCNN(nn.Module):
         self.fc1 = nn.Linear(conv_output_size, 128)
         self.fc2 = nn.Linear(128, 10)
 
+        self.__weights_init__()
+
+    def __weights_init__(self):
+        nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+
+        nn.init.zeros_(self.conv1.bias)
+        nn.init.zeros_(self.conv2.bias)
+        nn.init.zeros_(self.fc1.bias)
+        nn.init.zeros_(self.fc2.bias)
+
     def _get_conv_output(self, shape):
         batch_size = 1
         _input = torch.zeros(batch_size, 1, shape[0], shape[1])  # dummy input for size calculation
