@@ -4,6 +4,8 @@ import torch.nn as nn
 from snntorch import surrogate
 from snntorch import utils
 
+# TODO: test and reformat
+
 num_steps = 25 # number of time steps
 batch_size = 1
 beta = 0.5  # neuron decay rate
