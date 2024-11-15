@@ -12,7 +12,6 @@ class FederatedTrainer:
 
         self.global_model = self.trainable.server.global_trainable.model
 
-        self.training_scores = None
         self.round_scores = None
 
     def train_model(self):
@@ -24,4 +23,4 @@ class FederatedTrainer:
             # TODO : we are missing this
             pass
         else:
-            self.training_scores = federated_training(trainable, dataset)
+            self.round_scores = federated_training(trainable, dataset)

@@ -8,10 +8,10 @@ from utils.state import State
 class Server:
     def __init__(self, state):
         self.state = State(
-            federated=False,      # now should be False, although this model doesn't train anyway
+            federated=False,        # now should be False, although this model doesn't train anyway
             fed_type='server',
             neuromorphic=state.neuromorphic,
-            method=None           # no training method here, I guess?
+            method=state.method
         )
         self.global_trainable = Trainable(state=self.state)
 

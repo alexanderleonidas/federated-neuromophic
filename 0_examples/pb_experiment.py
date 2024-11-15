@@ -1,8 +1,8 @@
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
-import matplotlib.pyplot as plt
 
 
 # Define the neural network model
