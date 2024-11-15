@@ -59,10 +59,11 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
 
         # Run one epoch of training based on the chosen method
         if method == pb:
-            train_loss, train_acc = perturbation_based_learning(trainable, train_loader)
+            train_loss, train_acc = perturbation_based_learning(trainable, train_loader, train_indices)
         else:
             train_loss, train_acc = feedback_alignment_learning(trainable, train_loader, train_indices)
 
+        trainable.scheduler.step()
         # Run one epoch of validation using standard validation method
         val_loss, val_acc = run_epoch(trainable, validation_loader, val_indices, mode='val')
 

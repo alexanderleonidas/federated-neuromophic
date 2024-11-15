@@ -14,13 +14,14 @@ def forward(model, criterion, images, labels):
     return outputs, loss
 
 
-def perturbation_based_learning(trainable, data_loader, p_std=1e-4):
+def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4):
     """
     Perturbation-based learning for one epoch.
 
     Args:
         trainable: A class or object containing the model, optimizer, and criterion.
         data_loader: DataLoader for training data.
+        data_indices: indices for training data.
         p_std: The standard deviation of the perturbation vector.
     Returns:
         epoch_loss: Average loss for the epoch.
@@ -61,7 +62,7 @@ def perturbation_based_learning(trainable, data_loader, p_std=1e-4):
                 n_output, n_loss = forward(trainable.model, trainable.criterion, images, labels)
 
                 loss_diff = p_loss - n_loss                                                        # Estimate gradients
-                gradient_estimate = (loss_diff * perturbation) / (2 * (p_std ** 2))
+                gradient_estimate = (loss_diff * perturbation) / (2 * torch.sum(perturbation ** 2))
 
                 param.grad = gradient_estimate.clone()
                 grad_norm = gradient_estimate.norm().item()
@@ -89,7 +90,6 @@ def perturbation_based_learning(trainable, data_loader, p_std=1e-4):
             avg_grad_norm = sum(batch_gradient_norms[name]) / len(batch_gradient_norms[name])
             gradient_norms[name].append(avg_grad_norm)
 
-    trainable.scheduler.step()
-    epoch_loss = running_loss / len(data_loader)
+    epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
     return epoch_loss, epoch_acc

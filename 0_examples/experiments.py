@@ -91,5 +91,5 @@ def run_neuromorphic_federated():
 
 # run_normal_single()
 # run_normal_federated()
-run_neuromorphic_pb_single()
-# run_neuromorphic_fa_single()
+# run_neuromorphic_pb_single()
+run_neuromorphic_fa_single()

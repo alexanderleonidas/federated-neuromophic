@@ -36,7 +36,7 @@ def get_standard_training_parameters(model):
 def get_pb_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.05, weight_decay=1e-3)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
     return criterion, optimizer, scheduler
 
 def get_next_model_number_path(directory_path):
