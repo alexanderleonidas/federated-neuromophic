@@ -1,11 +1,10 @@
 from builtins import Exception
 
-import torch.nn as nn
 from torchvision import models
 
 from models.cnn_models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.cnn_models.simple_CNN_model import SimpleCNN
-from utils.globals import device, IMAGE_RESIZE, get_standard_training_parameters, pb, fa, get_pb_training_parameters
+from utils.globals import *
 
 USE_RESNET_MODEL = False
 USE_RESNET_PRETRAINED = False
@@ -46,8 +45,10 @@ class Trainable:
                 if USE_RESNET_MODEL:
                     self.__load_resnet_model__()
                 else:
-                    self.__load_simple_cnn_model__()
-
+                    if state.method == 'backprop':
+                        self.__load_simple_cnn_model__()
+                    else:
+                        raise Exception('Not Implemented yet')
 
     def __load_model__(self):
         # TODO: add models based on this sample layout
@@ -72,6 +73,7 @@ class Trainable:
         self.model = SimpleCNN(img_size).to(device)
         # Move the model to the appropriate device
         self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
+
 
     def __load_simple_cnn_neuromorphic_model__(self, img_size=IMAGE_RESIZE, method=None):
         if method is None:

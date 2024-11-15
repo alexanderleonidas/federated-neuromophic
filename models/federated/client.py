@@ -1,5 +1,5 @@
 from models.single_trainable import Trainable
-from training.single_backprop_training.batch_validation_training import batch_validation_training
+from training.single_backprop_training.batch_validation_training import batch_validation_training_single
 from utils.state import State
 
 
@@ -15,7 +15,7 @@ class Client:
 
     def local_train(self, dataset, epochs):
         """Trains the model on the client's local data."""
-        training_scores = batch_validation_training(self.local_model, dataset, num_epochs=epochs)
+        training_scores = batch_validation_training_single(self.local_model, dataset, num_epochs=epochs)
         return training_scores
 
     def get_model_weights(self):

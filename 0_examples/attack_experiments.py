@@ -1,7 +1,7 @@
 from data.mnist_loader import load_mnist_batches
 from evaluation.attacks import mia_attack
 from models.single_trainable import load_simple_model
-from training.single_backprop_training.batch_validation_training import batch_validation_training
+from training.single_backprop_training.batch_validation_training import batch_validation_training_single
 
 
 def run_mia():
@@ -19,7 +19,7 @@ def run_mia():
     untrained = load_simple_model()
 
     num_epochs = 2
-    _ = batch_validation_training(trainable, batches_dataset, num_epochs=num_epochs)
+    _ = batch_validation_training_single(trainable, batches_dataset, num_epochs=num_epochs)
 
     mia_attack(batches_dataset.train_loader, batches_dataset.test_loader, untrained, trainable)
 

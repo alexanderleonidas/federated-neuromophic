@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 
-from utils.globals import device
+from utils.globals import device, MAX_EPOCHS
 
 
 def generate_perturbation(param, p_std):
@@ -13,8 +13,7 @@ def forward(model, criterion, images, labels):
     loss = criterion(outputs, labels)  # Compute loss L = loss_function(y_pred, y)
     return outputs, loss
 
-
-def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4):
+def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4, epoch_idx=None):
     """
     Perturbation-based learning for one epoch.
 
@@ -23,6 +22,7 @@ def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4
         data_loader: DataLoader for training data.
         data_indices: indices for training data.
         p_std: The standard deviation of the perturbation vector.
+        epoch_idx: Optional index of the epoch.
     Returns:
         epoch_loss: Average loss for the epoch.
         epoch_acc: Average accuracy for the epoch.
@@ -32,7 +32,10 @@ def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4
     running_loss = 0.0
     correct = 0
     total = 0
-    progress_bar = tqdm(data_loader, desc='Perturbation Based Training.. ', leave=True)
+
+    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
+    progress_desc += 'PB Training '
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True)
     gradient_norms = {name: [] for name, _ in trainable.model.named_parameters() if _.requires_grad}
 
     #  For each training sample (input x, target y):

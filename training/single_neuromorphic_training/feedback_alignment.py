@@ -1,10 +1,10 @@
 import torch
 from tqdm import tqdm
 
-from utils.globals import device
+from utils.globals import device, MAX_EPOCHS
 
 
-def feedback_alignment_learning(trainable, data_loader, data_indices):
+def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=None):
     """
     Run a single epoch of training using feedback alignment.
 
@@ -25,7 +25,8 @@ def feedback_alignment_learning(trainable, data_loader, data_indices):
     correct = 0
     total = 0
 
-    progress_desc = 'Training'
+    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
+    progress_desc += 'FA Training'
     progress_bar = tqdm(data_loader, desc=progress_desc, leave=False)
 
     with torch.set_grad_enabled(True):  # Ensure gradients are enabled for training
