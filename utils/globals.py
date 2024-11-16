@@ -36,7 +36,7 @@ def get_standard_training_parameters(model):
 def get_pb_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.05, weight_decay=1e-3)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
     return criterion, optimizer, scheduler
 
 def get_next_model_number_path(directory_path):
@@ -79,9 +79,9 @@ PATH_TO_MNIST = PATH_TO_ROOT + 'MNIST'
 PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 2
+MAX_EPOCHS = 4
 NUM_CLASSES = 10
-BATCH_SIZE = 512
+BATCH_SIZE = 128
 VALIDATION_SPLIT = 0.2
 
 # IMAGES
@@ -93,7 +93,7 @@ pb = 'PERTURBATION_BASED'
 fa = 'FEEDBACK_ALIGNMENT'
 
 # FEDERATED PARAMETERS
-NUM_CLIENTS = 4
+NUM_CLIENTS = 3
 NUM_ROUNDS = 3
 
 # DIFFERENTIAL PRIVACY PARAMETERS

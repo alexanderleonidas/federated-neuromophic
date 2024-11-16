@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from IPython.core.pylabtools import figsize
 
 from training.watchers.federated_training_watcher import FederatedTrainingWatcher
 from utils.globals import MAX_EPOCHS, NUM_ROUNDS, NUM_CLIENTS
@@ -77,7 +76,7 @@ def plot_clients_learning_curves(client_round_watcher: FederatedTrainingWatcher,
     axs[0, 0].set_ylabel('Loss', fontsize='large')
     axs[1, 0].set_ylabel('Accuracy %', fontsize='large')
 
-    plt.subplots_adjust(top=0.80, hspace=0.3, left=0.05, right=0.85)
+    plt.subplots_adjust(top=0.85, hspace=0.3, left=0.05, right=0.85)
 
     # Add a general title for the entire figure
     fig.suptitle('Clients Learning Curves', fontsize=16, y=0.97)
@@ -91,8 +90,9 @@ def plot_clients_learning_curves(client_round_watcher: FederatedTrainingWatcher,
 
     legend_labels = ['Training', 'Validation', 'Round Averaging']
     handles = [plt.Line2D([0], [0], color=dfc[0]), plt.Line2D([0], [0], color=dfc[1]), plt.Line2D([0], [0], color='gray', linestyle='--')]
-    fig.legend(handles, legend_labels, loc='upper right', fontsize='large', bbox_to_anchor=(1.00, 0.5))
+    fig.legend(handles, legend_labels, loc='upper right', fontsize='large', bbox_to_anchor=(0.97, 0.5))
 
+    plt.tight_layout()
     plt.show()
 
 

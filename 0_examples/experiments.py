@@ -30,6 +30,7 @@ def run_normal_single():
 
 
 # SINGLE - BACKPROP w DIFFERENTIAL PRIVACY
+# TODO: implement and test
 def run_normal_single_dp():
     state = State(federated=False, neuromorphic=False, method='backprop-dp', save_model=False)
 
@@ -48,26 +49,8 @@ def run_normal_single_dp():
     plot_learning_curve(trainer.training_scores)
 
 
-# FEDERATED - BACKPROP
-def run_normal_federated():
-    clients_dataset = load_mnist_clients(NUM_CLIENTS)
-
-    state = State(federated=True, fed_type='entire', neuromorphic=False, method='backprop', save_model=True)
-
-    trainable = FederatedTrainable(state=state)
-    trainer = FederatedTrainer(trainable=trainable, dataset=clients_dataset, state=state)
-
-    trainer.train_model()
-
-    metrics = evaluate_outputs(trainer.global_model, clients_dataset.test_loader)
-    final_metrics = metrics.get_results()
-    metrics.print_results(final_metrics)
-
-    plot_clients_learning_curves(trainer.round_scores)
-    plot_server_round_scores(trainer.round_scores)
-
-
 # SINGLE - PERTURBATION BASED
+# TODO: broken? wtf
 def run_neuromorphic_pb_single():
     method = pb
     state = State(federated=False, neuromorphic=True, method=method)
@@ -104,17 +87,42 @@ def run_neuromorphic_fa_single():
     plot_learning_curve(trainer.training_scores)
 
 
+# FEDERATED - BACKPROP
+def run_normal_federated(state=None):
+    if state is None:
+        state = State(federated=True, fed_type='entire', neuromorphic=False, method='backprop', save_model=True)
+
+    clients_dataset = load_mnist_clients(NUM_CLIENTS)
+
+    trainable = FederatedTrainable(state=state)
+    trainer = FederatedTrainer(trainable=trainable, dataset=clients_dataset, state=state)
+
+    trainer.train_model()
+
+    metrics = evaluate_outputs(trainer.global_model, clients_dataset.test_loader)
+    final_metrics = metrics.get_results()
+    metrics.print_results(final_metrics)
+
+    plot_clients_learning_curves(trainer.round_scores)
+    plot_server_round_scores(trainer.round_scores)
+
+
 # FEDERATED - PERTURBATION BASED
 def run_neuromorphic_pb_federated():
-    pass
+    state = State(federated=True, fed_type='entire', neuromorphic=True, method=pb, save_model=True)
+    run_normal_federated(state)
 
 # FEDERATED - FEEDBACK ALIGNMENT
 def run_neuromorphic_fa_federated():
-    pass
+    state = State(federated=True, fed_type='entire', neuromorphic=True, method=fa, save_model=True)
+    run_normal_federated(state)
+
 
 # run_normal_single()
-run_normal_federated()
-# run_neuromorphic_pb_single()
+# run_normal_federated()
+run_neuromorphic_pb_single()
 # run_neuromorphic_fa_single()
+# run_neuromorphic_pb_federated()
+# run_neuromorphic_fa_federated()
 
 
