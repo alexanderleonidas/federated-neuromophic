@@ -15,7 +15,7 @@ def test_json_parsing_and_modeling():
 
 
     # Step 3: Save the data to a JSON file
-    file_path = 'normal_single_results.json'
+    file_path = 'normal_backprop_single_results_10epochs_standardtrainingparameters.json'
     JSONManager.save_to_json(normal_result, file_path)
 
     # Step 4: Load the data back from the JSON file

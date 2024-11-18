@@ -1,0 +1,6 @@
+Comparison Table:
+      Metric    Normal   Neuromorphic
+0   Accuracy   0.986697   0.898263
+1  Precision  98.669700  89.826300
+2     Recall   0.986697   0.898263
+3   F1-Score   0.986697   0.898263

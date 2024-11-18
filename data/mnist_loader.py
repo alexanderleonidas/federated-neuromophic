@@ -1,6 +1,6 @@
 from torchvision import datasets, transforms
 
-from data.dataset_loader import Dataset, BatchDataset, FederatedDataset
+from data.dataset_loader import Dataset, BatchDataset, FederatedDataset, DisjointClassFederatedDataset
 from utils.globals import PATH_TO_ROOT, IMAGE_RESIZE, I_HAVE_DOWNLOADED_MNIST, BATCH_SIZE, VALIDATION_SPLIT
 
 
@@ -38,9 +38,12 @@ def load_mnist_batches(validation_split=VALIDATION_SPLIT, shuffle_dataset=True, 
     return batches
 
 
-def load_mnist_clients(num_clients, shuffle_dataset=True, transform=get_transform(), validation_split=VALIDATION_SPLIT, batch_size=BATCH_SIZE):
+def load_mnist_clients(num_clients, disjoint_classes=False, shuffle_dataset=True, transform=get_transform(), validation_split=VALIDATION_SPLIT, batch_size=BATCH_SIZE,):
     dataset = extract_mnist(transform)
-    clients = FederatedDataset(dataset, num_clients, validation_split, batch_size, shuffle_dataset)
+    if disjoint_classes:
+        clients = DisjointClassFederatedDataset(dataset, num_clients, validation_split, batch_size, shuffle_dataset)
+    else:
+        clients = FederatedDataset(dataset, num_clients, validation_split, batch_size, shuffle_dataset)
     return clients
 
 

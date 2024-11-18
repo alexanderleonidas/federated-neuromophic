@@ -19,8 +19,4 @@ class FederatedTrainer:
 
 
     def __train_federated__(self, trainable: FederatedTrainable, dataset: FederatedDataset):
-        if self.state.neuromorphic:
-            # TODO : we are missing this
-            pass
-        else:
             self.round_scores = federated_training(trainable, dataset)

@@ -4,6 +4,7 @@ from torchvision import models
 
 from models.cnn_models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.cnn_models.simple_CNN_model import SimpleCNN
+from models.cnn_models.simple_CNN_optimized_model import SimpleCNNOptimized
 from utils.globals import *
 
 USE_RESNET_MODEL = False
@@ -79,7 +80,7 @@ class Trainable:
         if method is None:
             method = self.state.method
         if method == pb:
-            self.model = SimpleCNN(img_size).to(device)
+            self.model = SimpleCNNOptimized(img_size).to(device)
         elif method == fa:
             self.model = FeedbackAlignmentCNN(img_size).to(device)
         else:

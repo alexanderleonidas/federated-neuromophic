@@ -1,0 +1,37 @@
+++++++++++++++++++++++++++++++++++++ TEST REPORT ++++++++++++++++++++++++++++++++++++
+
+Test Accuracy: 3385 / 10000
+Precision: 33.85%
+Recall: 0.34
+F1 Score: 0.34
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Class-wise Precision, Recall, and F1 Scores:
+  Class 0: Precision: 37.98%, Recall: 0.97, F1 Score: 0.55, Support: 980.0
+  Class 1: Precision: 0.00%, Recall: 0.00, F1 Score: 0.00, Support: 1135.0
+  Class 2: Precision: 47.78%, Recall: 0.76, F1 Score: 0.59, Support: 1032.0
+  Class 3: Precision: 0.00%, Recall: 0.00, F1 Score: 0.00, Support: 1010.0
+  Class 4: Precision: 0.00%, Recall: 0.00, F1 Score: 0.00, Support: 982.0
+  Class 5: Precision: 0.00%, Recall: 0.00, F1 Score: 0.00, Support: 892.0
+  Class 6: Precision: 0.00%, Recall: 0.00, F1 Score: 0.00, Support: 958.0
+  Class 7: Precision: 0.00%, Recall: 0.00, F1 Score: 0.00, Support: 1028.0
+  Class 8: Precision: 23.38%, Recall: 0.85, F1 Score: 0.37, Support: 974.0
+  Class 9: Precision: 35.47%, Recall: 0.82, F1 Score: 0.49, Support: 1009.0
+  Class macro avg: Precision: 14.46%, Recall: 0.34, F1 Score: 0.20, Support: 10000.0
+  Class weighted avg: Precision: 14.51%, Recall: 0.34, F1 Score: 0.20, Support: 10000.0
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Confusion Matrix:
+[[949   0   4   0   0   0   0   0  20   7]
+ [  1   0 172   0   0   0   0   0 953   9]
+ [125   0 785   0   0   0   0   0 113   9]
+ [156   0 402   0   0   0   0   0 370  82]
+ [137   0  53   0   0   0   0   0 225 567]
+ [320   0  31   0   0   0   0   0 501  40]
+ [582   0  96   0   0   0   0   0 203  77]
+ [ 65   0  62   0   0   0   0   0 230 671]
+ [ 80   0  28   0   0   0   0   0 825  41]
+ [ 84   0  10   0   0   0   0   0  89 826]]
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
