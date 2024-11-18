@@ -28,13 +28,13 @@ def generate_synthetic_data(num_samples, input_size, output_size):
 
 # Hyperparameters
 input_size = 10
-hidden_size = 20
+hidden_size = 10
 output_size = 1
 learning_rate = 0.01
 num_epochs = 50
 perturbation_std = 0.001  # Standard deviation for perturbations
 batch_size = 32
-scheduler_step_size = 25  # Step size for learning rate scheduler
+scheduler_step_size = 20  # Step size for learning rate scheduler
 scheduler_gamma = 0.1  # Multiplicative factor of learning rate decay
 
 # Prepare datasets and dataloaders
@@ -105,6 +105,7 @@ for epoch in range(num_epochs):
                 param.data = original_param
 
         # Update parameters
+        loss.backward()
         optimizer.step()
 
         total_loss += loss.item()

@@ -7,7 +7,7 @@ import torch.optim as optim
 
 from utils.state import State
 
-VERBOSE = False
+VERBOSE = True
 
 
 def load_device():
@@ -35,7 +35,7 @@ def get_standard_training_parameters(model):
 
 def get_pb_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.05, weight_decay=1e-3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, weight_decay=1e-3)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
     return criterion, optimizer, scheduler
 
@@ -81,8 +81,8 @@ PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
 # TRAINING PARAMETERS
 MAX_EPOCHS = 4
 NUM_CLASSES = 10
-BATCH_SIZE = 128
-VALIDATION_SPLIT = 0.2
+BATCH_SIZE = 512
+VALIDATION_SPLIT = 0.05
 
 # IMAGES
 IMAGE_RESIZE = (28, 28)     # smaller means faster but harder to interpret completely
@@ -99,7 +99,6 @@ NUM_ROUNDS = 3
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4
 MAX_GRAD_NORM = 1.0
+TARGET_EPSILON = 10
 TARGET_DELTA = 2e-5  # Typically set to 1 / (number of training samples)
-
-
 

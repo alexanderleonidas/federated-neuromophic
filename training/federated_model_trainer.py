@@ -20,3 +20,8 @@ class FederatedTrainer:
 
     def __train_federated__(self, trainable: FederatedTrainable, dataset: FederatedDataset):
         self.round_scores = federated_training(trainable, dataset)
+
+    def test_model(self):
+        # TODO: move along metrics in the trainer
+        pass
+

@@ -10,8 +10,8 @@ def federated_training(trainable: FederatedTrainable, dataset:FederatedDataset, 
     clients = trainable.clients
     server = trainable.server
 
-    client_round_scores = FederatedTrainingWatcher()
-
+    federated_watcher = FederatedTrainingWatcher()
+    server_trainer = server.global_trainable
     for round_num in range(NUM_ROUNDS):
         print(f'Global Training Starting Round {round_num+1}/{NUM_ROUNDS}')
 
@@ -20,12 +20,15 @@ def federated_training(trainable: FederatedTrainable, dataset:FederatedDataset, 
             client_trainer = Trainer(client.local_model, client_dataset, client.state)
             print(f'Local training on client {client_id+1}/{len(clients)}')
             client_scores = client_trainer.train_model()
-            client_round_scores.record_client_round_training(round_num, client_id, client_scores)
+            federated_watcher.record_client_round_training(round_num, client_id, client_scores)
 
         global_weights = server_aggregation(server, clients)
 
         for client in clients:
             client.set_model_weights(global_weights)
 
-    return client_round_scores
+        # TODO: IMPLEMENT ROUND METRICS FOR THE SERVER GLOBAL MODEL
+        # federated_watcher.record_server_round_training(round_num)
+
+    return federated_watcher
 

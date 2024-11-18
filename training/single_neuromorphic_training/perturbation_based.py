@@ -1,7 +1,12 @@
+import random
+
+import numpy as np
 import torch
 from tqdm import tqdm
 
+from training.single_backprop_training.batch_validation_training import forward, update_progress_bar
 from utils.globals import device, MAX_EPOCHS
+
 
 def create_parameters_perturbations(trainable, p_std):
     perturbations = {}
@@ -17,12 +22,6 @@ def create_parameters_perturbations(trainable, p_std):
 
 def generate_perturbation(param, p_std):
     return torch.randn_like(param) * p_std
-
-def forward(model, criterion, images, labels):
-    # Forward pass:
-    outputs = model(images)            # Compute the network output y_pred = f(x; weights)
-    loss = criterion(outputs, labels)  # Compute loss L = loss_function(y_pred, y)
-    return outputs, loss
 
 def apply_perturbations(trainable, original_params, perturbations, positive: bool):
     for name, param in trainable.model.named_parameters():
@@ -50,7 +49,7 @@ def estimate_gradients(trainable, perturbations, loss_diff):
 
     return trainable
 
-def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4, epoch_idx=None):
+def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=None):
     trainable.model.train()
     running_loss = 0.0
     correct = 0
@@ -63,12 +62,14 @@ def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4
         images = images.to(device)
         labels = labels.to(device)
 
-        num_samples = images.size(0)
+        # Forward pass with updated parameters for statistics
+        outputs, baseline_loss = forward(trainable.model, trainable.criterion, images, labels)
 
         # Zero the parameter gradients
         trainable.optimizer.zero_grad()
 
         # Save original data and create perturbation vectors
+        p_std = random.uniform(1e-6, 1e-4)
         original_params, perturbations = create_parameters_perturbations(trainable, p_std)
 
         # Forward pass with positively perturbed parameters
@@ -91,27 +92,17 @@ def perturbation_based_learning(trainable, data_loader, data_indices, p_std=1e-4
         torch.nn.utils.clip_grad_norm_(trainable.model.parameters(), max_norm=2.0)
         trainable.optimizer.step()
 
-        # Forward pass with updated parameters for statistics
-        outputs, baseline_loss = forward(trainable.model, trainable.criterion, images, labels)
+        batch_stats = update_progress_bar(images, labels, outputs, baseline_loss, progress_bar)
+        running_loss += batch_stats[0]
+        correct += batch_stats[1]
+        total += batch_stats[2]
 
-        # Statistics
-        running_loss += baseline_loss.item() * num_samples
-        _, predicted = torch.max(outputs.data, 1)
-        total += num_samples
-        batch_correct = (predicted == labels).sum().item()
-        correct += batch_correct
-
-        # Update progress bar
-        batch_acc = 100 * batch_correct / num_samples
-        progress_bar.set_postfix({'Batch Loss': baseline_loss.item(), 'Batch Acc': f'{batch_acc:.2f}%'})
 
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
     return epoch_loss, epoch_acc
 
-
-
-def perturbation_based_learning2(trainable, data_loader, data_indices, p_std=1e-2, epoch_idx=None):
+def perturbation_based_learning2(trainable, data_loader, data_indices, p_std=1e-4, epoch_idx=None):
     """
     Perturbation-based learning for one epoch.
 
@@ -147,7 +138,7 @@ def perturbation_based_learning2(trainable, data_loader, data_indices, p_std=1e-
 
         outputs, baseline_loss = forward(trainable.model, trainable.criterion, images, labels)
 
-
+        baseline_loss.backward()
         trainable.optimizer.zero_grad()                             # Clear existing gradients
 
         # For each parameter w in the network:
