@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 from training.single_backprop_training.batch_validation_training import forward, update_progress_bar
-from utils.globals import device, MAX_EPOCHS
+from utils.globals import device, MAX_EPOCHS, VERBOSE
 
 
 def create_parameters_perturbations(trainable, p_std):
@@ -56,7 +56,7 @@ def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=
     total = 0
     progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
     progress_desc += 'PB Training '
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True)
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
 
     for images, labels in progress_bar:
         images = images.to(device)

@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 
 from training.single_backprop_training.batch_validation_training import update_progress_bar
-from utils.globals import device, MAX_EPOCHS
+from utils.globals import device, MAX_EPOCHS, VERBOSE
 
 
 def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=None):
@@ -28,7 +28,7 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
 
     progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
     progress_desc += 'FA Training'
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=False)
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=False, disable=not VERBOSE)
 
     with torch.set_grad_enabled(True):  # Ensure gradients are enabled for training
         for images, labels in progress_bar:

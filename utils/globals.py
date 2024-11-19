@@ -7,7 +7,7 @@ import torch.optim as optim
 
 from utils.state import State
 
-VERBOSE = True
+VERBOSE = False
 
 
 def load_device():
@@ -30,7 +30,7 @@ def load_device():
 def get_standard_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=1e-3)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.5)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4, gamma=0.5)
     return criterion, optimizer, scheduler
 
 def get_pb_training_parameters(model):
@@ -79,10 +79,10 @@ PATH_TO_MNIST = PATH_TO_ROOT + 'MNIST'
 PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 4
+MAX_EPOCHS = 10
 NUM_CLASSES = 10
-BATCH_SIZE = 512
-VALIDATION_SPLIT = 0.05
+BATCH_SIZE = 128
+VALIDATION_SPLIT = 0.15
 
 # IMAGES
 IMAGE_RESIZE = (28, 28)     # smaller means faster but harder to interpret completely

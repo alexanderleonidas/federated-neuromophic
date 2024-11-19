@@ -67,7 +67,7 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
 
     progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
     progress_desc += 'Training' if mode == 'train' else 'Validation'
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True)
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
 
     with torch.set_grad_enabled(mode == 'train'):  # Only compute gradients during training
         for images, labels in progress_bar:
