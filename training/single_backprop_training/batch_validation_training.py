@@ -4,7 +4,6 @@ from tqdm import tqdm
 
 from data.dataset_loader import BatchDataset
 from models.single_trainable import Trainable
-from training.single_backprop_training.batch_validation_dp_training import batch_validation_training_dp
 from training.watchers.training_watcher import TrainingWatcher
 from utils.globals import MAX_EPOCHS, get_model_path, device, VERBOSE
 
@@ -33,6 +32,15 @@ def run_epoch_training_validation(trainable: Trainable, batches_dataset: BatchDa
 
     return train_loss, train_acc, val_loss, val_acc
 
+def batch_validation_training_single(trainable: Trainable, batches_dataset: BatchDataset, num_epochs=MAX_EPOCHS):
+    training_scores = TrainingWatcher()
+
+    for epoch in range(num_epochs):
+        run_epoch_training_validation(trainable, batches_dataset, training_scores, epoch_idx=epoch)
+        trainable.scheduler.step()
+
+    return training_scores.get_records()
+
 def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, mode='train', epoch_idx=None):
     """
     Run a single epoch of training or validation.
@@ -59,7 +67,7 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
 
     progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
     progress_desc += 'Training' if mode == 'train' else 'Validation'
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True)
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
 
     with torch.set_grad_enabled(mode == 'train'):  # Only compute gradients during training
         for images, labels in progress_bar:
@@ -78,32 +86,32 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
                 loss.backward()
                 trainable.optimizer.step()
 
-            # Statistics
-            running_loss += loss.item() * images.size(0)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-            # Update progress bar with current loss and accuracy
-            batch_acc = 100 * (predicted == labels).sum().item() / labels.size(0)
-            progress_bar.set_postfix({'Batch Loss': loss.item(), 'Batch Acc': f'{batch_acc:.2f}%'})
+            batch_stats = update_progress_bar(images, labels, outputs, loss, progress_bar)
+            running_loss += batch_stats[0]
+            correct += batch_stats[1]
+            total += batch_stats[2]
 
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
 
     return epoch_loss, epoch_acc
 
-def batch_validation_training_single(trainable: Trainable, batches_dataset: BatchDataset, num_epochs=MAX_EPOCHS):
-    training_scores = TrainingWatcher()
 
-    for epoch in range(num_epochs):
-        run_epoch_training_validation(trainable, batches_dataset, training_scores, epoch_idx=epoch)
-        trainable.scheduler.step()
+def forward(model, criterion, images, labels):
+    # Forward pass:
+    outputs = model(images)            # Compute the network output y_pred = f(x; weights)
+    loss = criterion(outputs, labels)  # Compute loss L = loss_function(y_pred, y)
+    return outputs, loss
 
-    return training_scores.get_records()
+def update_progress_bar(images, labels, outputs, loss, progress_bar):
+    # Statistics
+    running_loss = loss.item() * images.size(0)
+    _, predicted = torch.max(outputs.data, 1)
+    total = labels.size(0)
+    correct = (predicted == labels).sum().item()
 
-def run_training_batch_validation(trainable: Trainable, batches_dataset: BatchDataset, method='backprop', num_epochs=MAX_EPOCHS):
-    if method == 'backprop':
-        return batch_validation_training_single(trainable, batches_dataset, num_epochs=num_epochs)
-    elif method == 'backprop-dp':
-        return batch_validation_training_dp(trainable, batches_dataset, num_epochs=num_epochs)
+    # Update progress bar with current loss and accuracy
+    batch_acc = 100 * (predicted == labels).sum().item() / labels.size(0)
+    progress_bar.set_postfix({'Batch Loss': loss.item(), 'Batch Acc': f'{batch_acc:.2f}%'})
+
+    return running_loss, correct, total

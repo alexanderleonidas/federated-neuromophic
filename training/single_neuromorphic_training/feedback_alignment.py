@@ -1,7 +1,8 @@
 import torch
 from tqdm import tqdm
 
-from utils.globals import device, MAX_EPOCHS
+from training.single_backprop_training.batch_validation_training import update_progress_bar
+from utils.globals import device, MAX_EPOCHS, VERBOSE
 
 
 def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=None):
@@ -27,7 +28,7 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
 
     progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
     progress_desc += 'FA Training'
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=False)
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=False, disable=not VERBOSE)
 
     with torch.set_grad_enabled(True):  # Ensure gradients are enabled for training
         for images, labels in progress_bar:
@@ -47,15 +48,10 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
             # Optimizer step
             trainable.optimizer.step()
 
-            # Statistics
-            running_loss += loss.item() * images.size(0)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-            # Update progress bar with current loss and accuracy
-            batch_acc = 100 * (predicted == labels).sum().item() / labels.size(0)
-            progress_bar.set_postfix({'Batch Loss': loss.item(), 'Batch Acc': f'{batch_acc:.2f}%'})
+            batch_stats = update_progress_bar(images, labels, outputs, loss, progress_bar)
+            running_loss += batch_stats[0]
+            correct += batch_stats[1]
+            total += batch_stats[2]
 
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total

@@ -1,4 +1,5 @@
 import numpy as np
+from opacus.utils.uniform_sampler import UniformWithReplacementSampler
 from torch.utils.data import DataLoader, SubsetRandomSampler, random_split
 
 
@@ -49,6 +50,16 @@ class BatchDataset(Dataset):
         validation_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=valid_sampler)
         return train_loader, validation_loader
 
+
+class DifferentialPrivacyDataset(BatchDataset):
+    def __init__(self, dataset, val_split_ratio, batch_size, shuffle):
+        super().__init__(dataset, val_split_ratio, batch_size, shuffle)
+        # self.train_loader = self.overload_train_loader(batch_size=batch_size)
+
+    def overload_train_loader(self, batch_size):
+        train_sampler = UniformWithReplacementSampler(num_samples=len(self.train_indices), sample_rate=batch_size/len(self.train_indices))
+        train_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=train_sampler, pin_memory=True)
+        return train_loader
 
 class FederatedDataset(Dataset):
     def __init__(self, dataset, num_clients, val_split_ratio, batch_size, shuffle):

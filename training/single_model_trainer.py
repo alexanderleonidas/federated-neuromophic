@@ -1,6 +1,6 @@
 from data.dataset_loader import BatchDataset
 from models.single_trainable import Trainable
-from training.single_backprop_training.batch_validation_training import batch_validation_training_single
+from training.single_backprop_training.single_backprop_training import run_training_batch_validation
 from training.single_neuromorphic_training.neuromorphic_training import neuromorphic_training
 from utils.globals import MAX_EPOCHS
 from utils.state import State
@@ -27,7 +27,7 @@ class Trainer:
         return self.training_scores
 
     def __train_single_backprop__(self, trainable: Trainable, dataset: BatchDataset):
-        self.training_scores = batch_validation_training_single(trainable, dataset, num_epochs=MAX_EPOCHS)
+        self.training_scores = run_training_batch_validation(trainable, dataset, method=trainable.state.method, num_epochs=MAX_EPOCHS)
         return self.training_scores
 
 

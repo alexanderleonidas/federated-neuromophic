@@ -1,8 +1,8 @@
 import torch
 from tqdm import tqdm
 
-from evaluation.metrics import Metrics
 from utils.globals import device
+from .metrics import Metrics
 
 
 def evaluate_outputs(model, test_loader):
