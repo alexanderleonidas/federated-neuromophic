@@ -23,11 +23,11 @@ def load_n_mnist_events(filename):
     with open(filename, 'rb') as f:
         evt_stream = np.frombuffer(f.read(), dtype=np.uint8)
 
-    # Ensure the data length is a multiple of 5 bytes
+    # Ensure the client_runs length is a multiple of 5 bytes
     num_events = evt_stream.size // 5
     evt_stream = evt_stream[:num_events * 5]
 
-    # Extract event data
+    # Extract event client_runs
     td_x = evt_stream[0::5].astype(np.int16) + 1  # X addresses, starting from 1
     td_y = evt_stream[1::5].astype(np.int16) + 1  # Y addresses, starting from 1
     td_p = ((evt_stream[2::5] >> 7) & 0x01)  # Polarity: 0 (OFF), 1 (ON)
@@ -53,7 +53,7 @@ def create_frames(fig, ax, events_dict: Dict[int, Dict[str, ndarray]], max_frame
     progress_bar = tqdm(range(max_frames), desc='Creating frames', leave=False)
 
     for frame_idx in progress_bar:
-        # Clear previous frame data
+        # Clear previous frame client_runs
         for subplot_ax in ax.flat:
             subplot_ax.clear()
             subplot_ax.set_facecolor('black')

@@ -47,7 +47,7 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
 
     Args:
         trainable: A class or object containing the model, optimizer, and criterion.
-        data_loader: DataLoader for either training or validation data.
+        data_loader: DataLoader for either training or validation client_runs.
         data_indices: Indices for the dataset (for accurate loss calculation).
         mode: Either 'train' or 'val' to specify if the function should train or validate.
         epoch_idx: Optional index of the current epoch.
@@ -56,10 +56,8 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
         epoch_acc: Average accuracy for the epoch.
     """
 
-    if mode == 'train':
-        trainable.model.train()
-    else:
-        trainable.model.eval()
+    if mode == 'train': trainable.model.train()
+    else: trainable.model.eval()
 
     running_loss = 0.0
     correct = 0
@@ -91,6 +89,7 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
             correct += batch_stats[1]
             total += batch_stats[2]
 
+    progress_bar.close()
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
 

@@ -1,126 +1,87 @@
-from data.mnist_loader import load_mnist_batches, load_mnist_clients, load_mnist_batches_dp
+import numpy as np
+
+from data.mnist_loader import load_mnist_batches
 from evaluation.evaluation import evaluate_outputs
-from models.federated_trainable import FederatedTrainable
+from evaluation.mia import membership_inference_attack
 from models.single_trainable import Trainable
-from training.federated_model_trainer import FederatedTrainer
 from training.single_model_trainer import Trainer
-from utils.globals import pb, fa, NUM_CLIENTS
-from utils.plotting import plot_learning_curve, plot_server_round_scores, plot_clients_learning_curves
+from utils.globals import fa
 from utils.state import State
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# SINGLE - BACKPROP
-def run_normal_single():
-    state = State(federated=False, neuromorphic=False, method='backprop', save_model=True)
-
-    batches_mnist_dataset = load_mnist_batches()
-
-    trainable = Trainable(state=state)
-    trainer = Trainer(trainable=trainable, dataset=batches_mnist_dataset, state=state)
+from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, classification_report, roc_curve, auc
 
 
-    trainer.train_model()
+state = State(neuromorphic=True, method=fa)
 
-    metrics = evaluate_outputs(trainable.model, batches_mnist_dataset.test_loader)
+# load dataset
+batches_dataset = load_mnist_batches()
 
-    final_metrics = metrics.get_results()
-    metrics.print_results(final_metrics)
+# load model components
+trainable = Trainable(state=state)
+trainer = Trainer(trainable=trainable, dataset=batches_dataset, state=state)
 
-    plot_learning_curve(trainer.training_scores)
+# train model
+trainer.train_model()
 
+# evaluate on test set
+test_metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
+final_metrics = test_metrics.get_results()
 
-# SINGLE - BACKPROP w DIFFERENTIAL PRIVACY
-def run_normal_single_dp():
-    state = State(federated=False, neuromorphic=False, method='backprop-dp', save_model=False)
+# run MIA
+mia_labels, mia_preds = membership_inference_attack(trainable, batches_dataset)
 
-    batches_mnist_dp_dataset = load_mnist_batches_dp()
-    trainable = Trainable(state=state)
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Convert to numpy arrays
+all_labels = np.array(mia_labels)
+all_preds = np.array(mia_preds)
 
-    trainable.support_dp_engine(batches_mnist_dp_dataset)
+# Binary predictions
+binary_preds = (mia_preds > 0.5).astype(int)
 
-    trainer = Trainer(trainable=trainable, dataset=batches_mnist_dp_dataset, state=state)
-    trainer.train_model()
+# Metrics
+accuracy = accuracy_score(mia_labels, binary_preds)
+roc_auc = roc_auc_score(mia_labels, mia_preds)
+cr = classification_report(mia_labels, binary_preds, target_names=['Non-member', 'Member'], zero_division=0.)
 
-    metrics = evaluate_outputs(trainable.model, batches_mnist_dp_dataset.test_loader)
+print(f'Attack Model Accuracy: {accuracy:.4f}\n')
+print(f'Attack Model ROC AUC: {roc_auc:.4f}\n')
+print(f'Classification Report: \n{cr}\n')
 
-    final_metrics = metrics.get_results()
-    metrics.print_results(final_metrics)
-
-    plot_learning_curve(trainer.training_scores)
-
-
-# SINGLE - PERTURBATION BASED
-# TODO: broken? wtf
-def run_neuromorphic_pb_single():
-    method = pb
-    state = State(federated=False, neuromorphic=True, method=method)
-
-    batches_dataset = load_mnist_batches()
-
-    trainable = Trainable(state=state)
-    trainer = Trainer(trainable= trainable, dataset=batches_dataset, state=state)
-    trainer.train_model()
-
-    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
-
-    final_metrics = metrics.get_results()
-    metrics.print_results(final_metrics)
-
-    plot_learning_curve(trainer.training_scores)
+cm = confusion_matrix(mia_labels, binary_preds)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title('Attack Model Confusion Matrix')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
 
 
-# SINGLE - FEEDBACK ALIGNMENT
-def run_neuromorphic_fa_single():
-    method = fa
-    state = State(federated=False, neuromorphic=True, method=method)
+# Distribution of Predicted Probabilities
+member_preds = mia_preds[mia_labels == 1]
+nonmember_preds = mia_preds[mia_labels == 0]
 
-    batches_dataset = load_mnist_batches()
-
-    trainable = Trainable(state=state)
-    trainer = Trainer(trainable=trainable, dataset=batches_dataset, state=state)
-    trainer.train_model()
-
-    metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
-    final_metrics = metrics.get_results()
-    metrics.print_results(final_metrics)
-
-    plot_learning_curve(trainer.training_scores)
+plt.figure(figsize=(12, 6))
+sns.kdeplot(member_preds.flatten(), label='Members', fill=True)
+sns.kdeplot(nonmember_preds.flatten(), label='Non-members', fill=True)
+plt.title('Distribution of Attack Model Predictions')
+plt.xlabel('Predicted Probability of Being a Member')
+plt.ylabel('Density')
+plt.legend()
+plt.show()
 
 
-# FEDERATED - BACKPROP
-def run_normal_federated(state=None):
-    if state is None:
-        state = State(federated=True, fed_type='entire', neuromorphic=False, method='backprop', save_model=True)
+# ROC Curve
+fpr, tpr, thresholds = roc_curve(mia_labels, mia_preds)
+roc_auc = auc(fpr, tpr)
 
-    clients_dataset = load_mnist_clients(NUM_CLIENTS)
-
-    trainable = FederatedTrainable(state=state)
-    trainer = FederatedTrainer(trainable=trainable, dataset=clients_dataset, state=state)
-
-    trainer.train_model()
-
-    metrics = evaluate_outputs(trainer.global_model, clients_dataset.test_loader)
-    final_metrics = metrics.get_results()
-    metrics.print_results(final_metrics)
-
-    plot_clients_learning_curves(trainer.round_scores)
-    plot_server_round_scores(trainer.round_scores)
-
-
-# FEDERATED - PERTURBATION BASED
-def run_neuromorphic_pb_federated():
-    state = State(federated=True, fed_type='entire', neuromorphic=True, method=pb, save_model=True)
-    run_normal_federated(state)
-
-# FEDERATED - FEEDBACK ALIGNMENT
-def run_neuromorphic_fa_federated():
-    state = State(federated=True, fed_type='entire', neuromorphic=True, method=fa, save_model=True)
-    run_normal_federated(state)
-
-
-# run_normal_single()
-run_normal_single_dp()
-# run_normal_federated()
-# run_neuromorphic_pb_single()
-# run_neuromorphic_fa_single()
-# run_neuromorphic_pb_federated()
-# run_neuromorphic_fa_federated()
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.4f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([-0.01, 1.0])
+plt.ylim([0.0, 1.01])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend(loc='lower right')
+plt.show()

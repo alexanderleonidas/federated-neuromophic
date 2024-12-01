@@ -7,7 +7,7 @@ import torch.optim as optim
 
 from utils.state import State
 
-VERBOSE = False
+VERBOSE = True
 
 
 def load_device():
@@ -79,10 +79,10 @@ PATH_TO_MNIST = PATH_TO_ROOT + 'MNIST'
 PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 10
+MAX_EPOCHS = 3
 NUM_CLASSES = 10
 BATCH_SIZE = 128
-VALIDATION_SPLIT = 0.15
+VALIDATION_SPLIT = 0.30
 
 # IMAGES
 IMAGE_RESIZE = (28, 28)     # smaller means faster but harder to interpret completely
@@ -94,7 +94,7 @@ fa = 'FEEDBACK_ALIGNMENT'
 
 # FEDERATED PARAMETERS
 NUM_CLIENTS = 3
-NUM_ROUNDS = 3
+NUM_ROUNDS = 7
 
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4

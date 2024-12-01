@@ -2,8 +2,6 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from utils.globals import IMAGE_RESIZE
-
 
 class DPSuitableCNN(nn.Module):
     def __init__(self, img_size=(28, 28)):

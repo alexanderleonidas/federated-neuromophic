@@ -8,9 +8,11 @@ from utils.globals import IMAGE_RESIZE
 class FeedbackAlignmentCNN(SimpleCNN):
     def __init__(self, img_size=IMAGE_RESIZE):
         super(FeedbackAlignmentCNN, self).__init__(img_size)
+
         # Initialize fixed random feedback matrices for the fully connected layers
         self.register_buffer('B_fc2', torch.randn(self.fc2.weight.size()))
         self.register_buffer('B_fc1', torch.randn(self.fc1.weight.size()))
+
 
     def forward(self, x, **kwargs):
         # Store activations and pre-activations for use in backward pass
@@ -38,6 +40,7 @@ class FeedbackAlignmentCNN(SimpleCNN):
         # Compute gradient of loss w.r.t. z4 (output logits)
         probs = F.softmax(self.z4, dim=1)
         targets_one_hot = F.one_hot(labels, num_classes=probs.size(1)).float().to(labels.device)
+
         grad_z4 = (probs - targets_one_hot) / batch_size  # Shape: (batch_size, num_classes)
 
         # Compute delta for fc1 using fixed random feedback matrix
@@ -45,10 +48,12 @@ class FeedbackAlignmentCNN(SimpleCNN):
 
         # Compute gradients for fc2
         grad_fc2_weight = torch.matmul(grad_z4.T, self.a3)  # Shape: (num_classes, 128)
+
         grad_fc2_bias = grad_z4.sum(dim=0)  # Shape: (num_classes)
 
         # Compute gradients for fc1
         grad_fc1_weight = torch.matmul(delta3.T, self.flat)  # Shape: (128, conv_output_size)
+
         grad_fc1_bias = delta3.sum(dim=0)  # Shape: (128)
 
         # Set the gradients for fc2 and fc1

@@ -23,7 +23,7 @@ net = nn.Sequential(
       snn.Leaky(beta=beta, init_hidden=True, spike_grad=spike_grad, output=True)
       )
 
-data_in = torch.rand(num_steps, batch_size, 1, 28, 28) # random input data
+data_in = torch.rand(num_steps, batch_size, 1, 28, 28) # random input client_runs
 spike_recording = [] # record spikes over time
 utils.reset(net) # reset/initialize hidden states for all neurons
 
