@@ -61,6 +61,7 @@ class DifferentialPrivacyDataset(BatchDataset):
         train_loader = DataLoader(self.training_set, batch_size=batch_size, sampler=train_sampler, pin_memory=True)
         return train_loader
 
+
 class FederatedDataset(Dataset):
     def __init__(self, dataset, num_clients, val_split_ratio, batch_size, shuffle):
         super().__init__(dataset.training_set, dataset.testing_set)

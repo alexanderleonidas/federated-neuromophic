@@ -12,6 +12,8 @@ import seaborn as sns
 
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, classification_report, roc_curve, auc
 
+# TODO: this to re-usable code for experiments
+# TODO: adapt to federated? Which client owns which data?
 
 state = State(neuromorphic=True, method=fa)
 
