@@ -14,7 +14,7 @@ class Client:
         self.local_model = Trainable(state=self.state)
 
     def local_train(self, dataset, epochs):
-        """Trains the model on the client's local data."""
+        """Trains the model on the client's local client_runs."""
         training_scores = batch_validation_training_single(self.local_model, dataset, num_epochs=epochs)
         return training_scores
 

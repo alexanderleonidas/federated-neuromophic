@@ -1,5 +1,3 @@
-import math
-
 import torch
 from tqdm import tqdm
 
@@ -7,7 +5,7 @@ from data.dataset_loader import BatchDataset
 from models.single_trainable import Trainable
 from training.single_backprop_training.batch_validation_training import run_one_epoch, forward, update_progress_bar
 from training.watchers.dp_training_watcher import TrainingWatcherDP
-from utils.globals import MAX_EPOCHS, get_model_path, VERBOSE, NOISE_MULTIPLIER, BATCH_SIZE, TARGET_DELTA, device
+from utils.globals import MAX_EPOCHS, get_model_path, VERBOSE, BATCH_SIZE, TARGET_DELTA, device
 
 
 def batch_validation_training_single_dp(trainable: Trainable, batches_dataset: BatchDataset, num_epochs=MAX_EPOCHS):

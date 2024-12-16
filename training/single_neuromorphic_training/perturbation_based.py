@@ -1,6 +1,5 @@
 import random
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -68,7 +67,7 @@ def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=
         # Zero the parameter gradients
         trainable.optimizer.zero_grad()
 
-        # Save original data and create perturbation vectors
+        # Save original client_runs and create perturbation vectors
         p_std = random.uniform(1e-6, 1e-4)
         original_params, perturbations = create_parameters_perturbations(trainable, p_std)
 
@@ -108,8 +107,8 @@ def perturbation_based_learning2(trainable, data_loader, data_indices, p_std=1e-
 
     Args:
         trainable: A class or object containing the model, optimizer, and criterion.
-        data_loader: DataLoader for training data.
-        data_indices: indices for training data.
+        data_loader: DataLoader for training client_runs.
+        data_indices: indices for training client_runs.
         p_std: The standard deviation of the perturbation vector.
         epoch_idx: Optional index of the epoch.
     Returns:

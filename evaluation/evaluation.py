@@ -1,8 +1,8 @@
 import torch
 from tqdm import tqdm
 
-from utils.globals import device
 from .metrics import Metrics
+from utils.globals import device, VERBOSE
 
 
 def evaluate_outputs(model, test_loader):
@@ -23,5 +23,23 @@ def evaluate_outputs(model, test_loader):
             current_accuracy = metrics.compute_accuracy()
             test_progress_bar.set_postfix({'Accuracy': f'{current_accuracy:.2f}%'})
 
+    test_progress_bar.close()
     return metrics
 
+
+def get_outputs(model, data_loader):
+    model.eval()
+    outputs_list = []
+    labels_list = []
+    progress_bar = tqdm(data_loader, desc='Collecting Inference Results', leave=True, disable=not VERBOSE)
+
+    with torch.no_grad():
+        for inputs, labels in progress_bar:
+            inputs = inputs.to(device)
+            outputs = model(inputs)
+            outputs_list.append(outputs.cpu())
+            labels_list.append(labels)
+
+    progress_bar.close()
+
+    return torch.cat(outputs_list), torch.cat(labels_list)
