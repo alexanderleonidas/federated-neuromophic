@@ -9,3 +9,4 @@ nir
 nirtorch
 snntorch~=0.9.1
 pillow~=10.2.0
+opacus~=1.5.2
