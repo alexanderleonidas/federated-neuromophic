@@ -1,4 +1,7 @@
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, classification_report, roc_curve, auc
 
 from data.mnist_loader import load_mnist_batches
 from evaluation.evaluation import evaluate_outputs
@@ -7,10 +10,6 @@ from models.single_trainable import Trainable
 from training.single_model_trainer import Trainer
 from utils.globals import fa
 from utils.state import State
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, classification_report, roc_curve, auc
 
 # TODO: this to re-usable code for experiments
 # TODO: adapt to federated? Which client owns which data?
@@ -20,11 +19,11 @@ state = State(neuromorphic=True, method=fa)
 # load dataset
 batches_dataset = load_mnist_batches()
 
-# load model components
+# load model_type components
 trainable = Trainable(state=state)
 trainer = Trainer(trainable=trainable, dataset=batches_dataset, state=state)
 
-# train model
+# train model_type
 trainer.train_model()
 
 # evaluate on test set

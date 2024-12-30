@@ -5,10 +5,9 @@ from training.single_model_trainer import Trainer
 from utils.plotting import plot_learning_curve
 from utils.state import State
 
-if __name__ == '__main__':
-    # We don't really need a main class for now, just bunch of experiments to run
-    # See package examples
 
+# SINGLE MODEL - BACKPROP BY DEFAULT
+def test_nmnist_training():
     state = State()  # default single model with backprop
     state.model_type = 'snn'
 
@@ -31,4 +30,4 @@ if __name__ == '__main__':
     plot_learning_curve(trainer.training_scores)
 
     # return test results and training recordings
-    print(final_metrics, trainer.training_scores)
+    return final_metrics, trainer.training_scores

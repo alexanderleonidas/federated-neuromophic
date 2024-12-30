@@ -19,10 +19,10 @@ class Metrics:
 
     def update(self, outputs, labels):
         """
-        Updates the metric counters based on model outputs and true labels.
+        Updates the metric counters based on model_type outputs and true labels.
 
         Args:
-            outputs (torch.Tensor): The raw outputs from the model (logits).
+            outputs (torch.Tensor): The raw outputs from the model_type (logits).
             labels (torch.Tensor): The ground truth labels.
         """
         _, predicted = torch.max(outputs.data, 1)

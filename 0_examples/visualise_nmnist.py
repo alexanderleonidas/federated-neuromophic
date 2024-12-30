@@ -9,6 +9,7 @@ from PIL import Image
 from numpy import ndarray
 from tqdm import tqdm
 
+from data.neuro_mnist_loader import load_n_mnist_events
 from utils.globals import PATH_TO_N_MNIST
 
 """
@@ -17,27 +18,6 @@ Visualise the N-MNIST dataset as a gif
 
 # CONSTANTS
 DURATION = 50
-
-
-def load_n_mnist_events(filename):
-    with open(filename, 'rb') as f:
-        evt_stream = np.frombuffer(f.read(), dtype=np.uint8)
-
-    # Ensure the client_runs length is a multiple of 5 bytes
-    num_events = evt_stream.size // 5
-    evt_stream = evt_stream[:num_events * 5]
-
-    # Extract event client_runs
-    td_x = evt_stream[0::5].astype(np.int16) + 1  # X addresses, starting from 1
-    td_y = evt_stream[1::5].astype(np.int16) + 1  # Y addresses, starting from 1
-    td_p = ((evt_stream[2::5] >> 7) & 0x01)  # Polarity: 0 (OFF), 1 (ON)
-
-    # Extract timestamp bits
-    td_ts = ((evt_stream[2::5] & 0x7F).astype(np.uint32) << 16)  # Bits 6-0 of 3rd byte
-    td_ts |= (evt_stream[3::5].astype(np.uint32) << 8)  # 4th byte
-    td_ts |= evt_stream[4::5].astype(np.uint32)  # 5th byte
-
-    return td_x, td_y, td_ts, td_p
 
 
 def create_frames(fig, ax, events_dict: Dict[int, Dict[str, ndarray]], max_frames: int) -> list:

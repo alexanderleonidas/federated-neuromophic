@@ -16,7 +16,7 @@ def run_single_model(state=None):
     # load dataset
     batches_dataset = load_mnist_batches()
 
-    # load model components
+    # load model_type components
     trainable = Trainable(state=state)
     if state.method == 'backprop-dp':   trainable.support_dp_engine(batches_dataset)
 

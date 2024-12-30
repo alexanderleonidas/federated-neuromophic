@@ -10,7 +10,7 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
     Run a single epoch of training using feedback alignment.
 
     Args:
-        trainable: A class or object containing the model, optimizer, and criterion.
+        trainable: A class or object containing the model_type, optimizer, and criterion.
         data_loader: DataLoader for training client_runs.
         data_indices: Indices for the dataset (for accurate loss calculation).
 
@@ -19,7 +19,7 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
         epoch_acc: Average accuracy for the epoch.
     """
 
-    # Set model to training mode
+    # Set model_type to training mode
     trainable.model.train()
 
     running_loss = 0.0

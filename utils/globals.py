@@ -74,9 +74,11 @@ cudnn.benchmark = True
 
 
 # DATASET VARIABLES
-PATH_TO_ROOT = '../MNIST_DATA/'
-PATH_TO_MNIST = PATH_TO_ROOT + 'MNIST'
-PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
+
+PATH_TO_ROOT = os.path.abspath(os.curdir)
+PATH_TO_DATA = os.path.join(PATH_TO_ROOT, 'MNIST_DATA')
+PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
+PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
 
 # TRAINING PARAMETERS
 MAX_EPOCHS = 3

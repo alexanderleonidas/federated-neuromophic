@@ -90,7 +90,7 @@ def run_one_epoch_dp(trainable, data_loader, data_indices, mode='train', epoch_i
 
         outputs, loss = forward(trainable.model, trainable.criterion, images, labels)
         loss.backward()
-        # Update model parameters
+        # Update model_type parameters
         trainable.optimizer.step()
 
         batch_stats = update_progress_bar(images, labels, outputs, loss, progress_bar)
@@ -118,7 +118,7 @@ def run_epoch_training_validation_dp(trainable: Trainable, batches_dataset: Batc
 
     training_scores.record_epoch_dp(train_loss, train_acc, val_loss, val_acc, privacy_spent)
 
-    # Save the model if validation accuracy improves
+    # Save the model_type if validation accuracy improves
     if training_scores.is_best_accuracy() and trainable.state.save_model:
         torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
