@@ -1,4 +1,4 @@
-# Stochastic Neuromorphic Learning for Privacy-aware Federated Learning
+# Stochastic Neuromorphic Solutions for Privacy-aware Federated Learning
 This repository complements the research conducted at the DACS department of Maastricht University. 
 
 
