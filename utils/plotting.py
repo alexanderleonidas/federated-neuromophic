@@ -112,7 +112,7 @@ def stack_client_scores(round_records):
 
     for round_num in range(NUM_ROUNDS):
         for client_id in range(NUM_CLIENTS):
-            scores = round_records[round_num][client_id]
+            scores = round_records[f'{round_num}'][f'{client_id}']
             for key in ['Training Loss', 'Validation Loss', 'Training Accuracy', 'Validation Accuracy']:
                 client_scores[client_id][key].extend(scores[key])
 
@@ -197,7 +197,7 @@ def plot_runs_mean_with_std(data, loss_or_acc):
     plt.title(f'{loss_or_acc} Over Epochs (Mean with Std)')
     plt.xlabel('Epochs')
     plt.ylabel(f'{loss_or_acc}')
-    plt.legend(loc='upper right')
+    plt.legend(loc='lower right')
     plt.grid(True)
     plt.show()
 
@@ -241,7 +241,7 @@ def plot_client_runs_mean_with_std(client_ax, x, client_runs, loss_or_acc):
 
 
 def plot_clients_learning_curves_multiple_runs(round_scores, num_epochs=MAX_EPOCHS * NUM_ROUNDS):
-    stacked_client_scores = stack_client_scores(round_scores)
+    stacked_client_scores = stack_client_scores_multiple_runs(round_scores)
 
     x = range(1, num_epochs + 1)
 
