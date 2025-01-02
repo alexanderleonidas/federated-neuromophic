@@ -11,7 +11,6 @@ from training.single_model_trainer import Trainer
 from utils.globals import fa
 from utils.state import State
 
-# TODO: this to re-usable code for experiments
 # TODO: adapt to federated? Which client owns which data?
 
 state = State(neuromorphic=True, method=fa)
@@ -33,13 +32,14 @@ final_metrics = test_metrics.get_results()
 # run MIA
 mia_labels, mia_preds = membership_inference_attack(trainable, batches_dataset)
 
+print(mia_labels, mia_preds)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Convert to numpy arrays
 all_labels = np.array(mia_labels)
 all_preds = np.array(mia_preds)
 
 # Binary predictions
-binary_preds = (mia_preds > 0.5).astype(int)
+binary_preds = (all_preds > 0.5).astype(int)
 
 # Metrics
 accuracy = accuracy_score(mia_labels, binary_preds)
@@ -59,12 +59,12 @@ plt.show()
 
 
 # Distribution of Predicted Probabilities
-member_preds = mia_preds[mia_labels == 1]
-nonmember_preds = mia_preds[mia_labels == 0]
+member_preds = all_preds[mia_labels == 1]
+nonmember_preds = all_preds[mia_labels == 0]
 
 plt.figure(figsize=(12, 6))
 sns.kdeplot(member_preds.flatten(), label='Members', fill=True)
-sns.kdeplot(nonmember_preds.flatten(), label='Non-members', fill=True)
+sns.kdeplot(nonmember_preds.flatten(), label='Non members', fill=True)
 plt.title('Distribution of Attack Model Predictions')
 plt.xlabel('Predicted Probability of Being a Member')
 plt.ylabel('Density')

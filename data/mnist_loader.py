@@ -1,7 +1,8 @@
 from torchvision import datasets, transforms
 
 from data.dataset_loader import Dataset, BatchDataset, FederatedDataset, DifferentialPrivacyDataset
-from utils.globals import PATH_TO_ROOT, IMAGE_RESIZE, I_HAVE_DOWNLOADED_MNIST, BATCH_SIZE, VALIDATION_SPLIT
+from utils.globals import PATH_TO_ROOT, IMAGE_RESIZE, I_HAVE_DOWNLOADED_MNIST, BATCH_SIZE, VALIDATION_SPLIT, \
+    PATH_TO_MNIST, PATH_TO_DATA
 
 
 def get_augmentation_transform(img_size=IMAGE_RESIZE):
@@ -27,8 +28,8 @@ def get_transform(img_size=IMAGE_RESIZE):
 
 def extract_mnist(transform):
     # Download and load the training and test datasets
-    train_dataset = datasets.MNIST(root=PATH_TO_ROOT, train=True, download=not I_HAVE_DOWNLOADED_MNIST, transform=transform)
-    test_dataset = datasets.MNIST(root=PATH_TO_ROOT, train=False, download=not I_HAVE_DOWNLOADED_MNIST, transform=transform)
+    train_dataset = datasets.MNIST(root=PATH_TO_DATA, train=True, download=not I_HAVE_DOWNLOADED_MNIST, transform=transform)
+    test_dataset = datasets.MNIST(root=PATH_TO_DATA, train=False, download=not I_HAVE_DOWNLOADED_MNIST, transform=transform)
     return Dataset(train_dataset, test_dataset)
 
 

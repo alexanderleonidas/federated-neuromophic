@@ -4,6 +4,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
+import sys
 
 from utils.state import State
 
@@ -75,10 +76,12 @@ cudnn.benchmark = True
 
 # DATASET VARIABLES
 
-PATH_TO_ROOT = os.path.abspath(os.curdir)
+PATH_TO_ROOT = sys.path[1]
 PATH_TO_DATA = os.path.join(PATH_TO_ROOT, 'MNIST_DATA')
 PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
 PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
+
+print(PATH_TO_ROOT, PATH_TO_DATA, PATH_TO_MNIST, PATH_TO_N_MNIST)
 
 # TRAINING PARAMETERS
 MAX_EPOCHS = 3

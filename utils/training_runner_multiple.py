@@ -48,7 +48,6 @@ def load_recorded_scores(state):
 
     return file_path, scores, last_it
 
-
 def get_federated_model_running_fn(state):
     if state.neuromorphic:
         if state.method == pb: return run_neuromorphic_pb_federated
@@ -96,7 +95,6 @@ def run_multiple_federated(state):
 
     loaded_scores = load_json_data(training_scores_file)
     plot_clients_learning_curves_multiple_runs(loaded_scores)
-
 
 def get_single_model_running_fn(state):
     if state.neuromorphic:
@@ -146,7 +144,6 @@ def run_multiple_single_model(state):
 
     loaded_scores = load_json_data(training_scores_file)
     plot_runs_mean_with_std([sc['training_scores'] for _, sc in loaded_scores.items()], 'Accuracy')
-
 
 def run_multiple(state):
     if state.federated: run_multiple_federated(state)
