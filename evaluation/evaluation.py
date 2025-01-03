@@ -1,13 +1,13 @@
 import torch
 from tqdm import tqdm
 
-from .metrics import Metrics
 from utils.globals import device, VERBOSE
+from .metrics import Metrics
 
 
 def evaluate_outputs(model, test_loader):
 
-    model.eval()        # Set model in not-training mode
+    model.eval()        # Set model_type in not-training mode
     metrics = Metrics()  # Initialize metrics
 
     test_progress_bar = tqdm(test_loader, desc='Testing', leave=True)

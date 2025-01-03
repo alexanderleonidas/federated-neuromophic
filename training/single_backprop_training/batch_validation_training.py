@@ -20,7 +20,7 @@ def run_epoch_training_validation(trainable: Trainable, batches_dataset: BatchDa
 
     training_scores.record_epoch(train_loss, train_acc, val_loss, val_acc)
 
-    # Save the model if validation accuracy improves
+    # Save the model_type if validation accuracy improves
     if training_scores.is_best_accuracy() and trainable.state.save_model:
         torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
@@ -46,7 +46,7 @@ def run_one_epoch(trainable: Trainable, data_loader: DataLoader, data_indices, m
     Run a single epoch of training or validation.
 
     Args:
-        trainable: A class or object containing the model, optimizer, and criterion.
+        trainable: A class or object containing the model_type, optimizer, and criterion.
         data_loader: DataLoader for either training or validation client_runs.
         data_indices: Indices for the dataset (for accurate loss calculation).
         mode: Either 'train' or 'val' to specify if the function should train or validate.

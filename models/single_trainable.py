@@ -7,6 +7,7 @@ from data.dataset_loader import DifferentialPrivacyDataset
 from models.cnn_models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.cnn_models.simple_CNN_dp import DPSuitableCNN
 from models.cnn_models.simple_CNN_model import SimpleCNN
+from models.snn_models.simple_SNN_model import SimpleSNN
 from utils.globals import *
 
 USE_RESNET_MODEL = False
@@ -22,41 +23,8 @@ class Trainable:
 
         self.state = state
 
-        self.__load_components__()
+        self.__load_components__(self.state)
 
-
-        
-        
-    def __load_components__(self, state=None):
-        if state is None:
-            state = self.state
-
-        if state.federated:
-            if state.neuromorphic:
-                # TODO: here add more options when single_neuromorphic_training is implemented
-                raise Exception('Not Implemented yet')
-            else:
-                if state.fed_type == 'entire':
-                    return
-                elif state.fed_type == 'client':         #          TODO: server-clients can have different models?
-                    self.__load_simple_cnn_model__()     #   (1)    TODO: difference in model also within clients?
-                elif state.fed_type == 'server':         #
-                    self.__load_simple_cnn_model__()     #   (2)
-                else:
-                    raise Exception('Not Supposed to do this')
-        else:
-            if state.neuromorphic:
-                self.__load_simple_cnn_neuromorphic_model__()
-            else:
-                if USE_RESNET_MODEL:
-                    self.__load_resnet_model__()
-                else:
-                    if state.method == 'backprop':
-                        self.__load_simple_cnn_model__()
-                    elif state.method == 'backprop-dp':
-                        self.__load_simple_cnn_dp_model__()
-                    else:
-                        raise Exception('Not Implemented yet')
 
     def support_dp_engine(self, dataset:DifferentialPrivacyDataset):
         engine = PrivacyEngine()
@@ -75,17 +43,47 @@ class Trainable:
         dataset.training_set = dataloader
         self.privacy_engine = engine
 
+        
+    def __load_components__(self, state):
+
+        if state.model_type == 'snn':
+            # TODO: dfa here? and what else?
+            supported = (state.method == 'backprop') and (state.neuromorphic == False) and (state.federated == False)
+            if supported: self.__load_simple_snn_model__()
+            else: raise Exception('Not Implemented yet')
+        else:
+            if state.federated: self.__load_federated__(state)
+            else: self.__load_single__(state)
 
 
-    def __load_model__(self):
-        # TODO: add models based on this sample layout
-        # model =
-        # model = model.to(device)
-        # criterion, optimizer, scheduler =
-        pass
+    def __load_federated__(self, state):
+        if state.neuromorphic:
+            raise Exception('Not Implemented yet')
+        else:
+            if state.fed_type == 'entire':
+                return
+            elif state.fed_type == 'client':
+                self.__load_simple_cnn_model__()  # (1)
+            elif state.fed_type == 'server':  #
+                self.__load_simple_cnn_model__()  # (2)
+            else:
+                raise Exception('Not Supposed to do this')
+
+    def __load_single__(self, state):
+        if state.neuromorphic: self.__load_simple_cnn_neuromorphic_model__()
+        else:
+            if USE_RESNET_MODEL:
+                self.__load_resnet_model__()
+            else:
+                if state.method == 'backprop':
+                    self.__load_simple_cnn_model__()
+                elif state.method == 'backprop-dp':
+                    self.__load_simple_cnn_dp_model__()
+                else:
+                    raise Exception('Not Implemented yet')
 
     def __load_resnet_model__(self, pretrained=USE_RESNET_PRETRAINED):
-        # Load a non-pretrained ResNet18 model for its architecture ** works with images (224,224) **
+        # Load a non-pretrained ResNet18 model_type for its architecture ** works with images (224,224) **
         model = models.resnet18(pretrained=pretrained)
 
         # Modify the final layer to match the number of classes in MNIST
@@ -99,10 +97,13 @@ class Trainable:
         self.model = SimpleCNN(img_size).to(device)
         self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
 
+    def __load_simple_snn_model__(self):
+        self.model = SimpleSNN().to(device)
+        self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
+
     def __load_simple_cnn_dp_model__(self, img_size=IMAGE_RESIZE):
         self.model = DPSuitableCNN(img_size).to(device)
         self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
-
 
     def __load_simple_cnn_neuromorphic_model__(self, img_size=IMAGE_RESIZE, method=None):
         if method is None:
@@ -114,6 +115,6 @@ class Trainable:
             self.model = FeedbackAlignmentCNN(img_size).to(device)
             self.criterion, self.optimizer, self.scheduler = get_pb_training_parameters(self.model)
         else:
-            raise Exception('Non valid method, unable to load model')
+            raise Exception('Non valid method, unable to load model_type')
 
-        # Move the model to the appropriate device
+        # Move the model_type to the appropriate device

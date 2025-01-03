@@ -26,16 +26,16 @@ from utils.globals import pb, get_model_path, VERBOSE
 #                 w_new = w_orig - learning_rate * grad_estimate
 #             Restore the original parameter for the next iteration
 #
-#     Validate the model on the validation set:
+#     Validate the model_type on the validation set:
 #         Compute validation loss and performance metrics
 #
 
 def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
     """
-    Train the model using either perturbation-based learning (PBL) or feedback alignment (FA).
+    Train the model_type using either perturbation-based learning (PBL) or feedback alignment (FA).
 
     Args:
-        trainable: A class or object containing the model, optimizer, and criterion.
+        trainable: A class or object containing the model_type, optimizer, and criterion.
         batches_dataset: Dataset object with training and validation loaders and indices.
         method: Method to use ('pb' for perturbation-based, 'fa' for feedback alignment).
         num_epochs: Number of epochs to train.

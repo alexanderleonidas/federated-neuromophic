@@ -106,7 +106,7 @@ def perturbation_based_learning2(trainable, data_loader, data_indices, p_std=1e-
     Perturbation-based learning for one epoch.
 
     Args:
-        trainable: A class or object containing the model, optimizer, and criterion.
+        trainable: A class or object containing the model_type, optimizer, and criterion.
         data_loader: DataLoader for training client_runs.
         data_indices: indices for training client_runs.
         p_std: The standard deviation of the perturbation vector.

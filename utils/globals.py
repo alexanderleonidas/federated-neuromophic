@@ -4,6 +4,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
+import sys
 
 from utils.state import State
 
@@ -30,13 +31,13 @@ def load_device():
 def get_standard_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=1e-3)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4, gamma=0.5)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
     return criterion, optimizer, scheduler
 
 def get_pb_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, weight_decay=1e-3)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.05, weight_decay=1e-3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
     return criterion, optimizer, scheduler
 
 def get_next_model_number_path(directory_path):
@@ -74,12 +75,14 @@ cudnn.benchmark = True
 
 
 # DATASET VARIABLES
-PATH_TO_ROOT = '../MNIST_DATA/'
-PATH_TO_MNIST = PATH_TO_ROOT + 'MNIST'
-PATH_TO_N_MNIST = PATH_TO_ROOT + 'N_MNIST'
+
+PATH_TO_ROOT = sys.path[1]
+PATH_TO_DATA = os.path.join(PATH_TO_ROOT, 'MNIST_DATA')
+PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
+PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 3
+MAX_EPOCHS = 10
 NUM_CLASSES = 10
 BATCH_SIZE = 128
 VALIDATION_SPLIT = 0.30
@@ -94,7 +97,7 @@ fa = 'FEEDBACK_ALIGNMENT'
 
 # FEDERATED PARAMETERS
 NUM_CLIENTS = 3
-NUM_ROUNDS = 7
+NUM_ROUNDS = 3
 
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4

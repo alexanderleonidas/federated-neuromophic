@@ -8,7 +8,7 @@ from utils.state import State
 class Server:
     def __init__(self, state):
         self.state = State(
-            federated=False,        # now should be False, although this model doesn't train anyway
+            federated=False,        # now should be False, although this model_type doesn't train anyway
             fed_type='server',
             neuromorphic=state.neuromorphic,
             method=state.method
@@ -16,7 +16,7 @@ class Server:
         self.global_trainable = Trainable(state=self.state)
 
     def aggregate_weights(self, clients: list[Client]):
-        """Aggregates the model weights from all clients using a simple averaging method."""
+        """Aggregates the model_type weights from all clients using a simple averaging method."""
 
         global_weights = clients[0].get_model_weights()  # Start with the first client's weights
 
@@ -26,14 +26,14 @@ class Server:
 
             global_weights[key] = torch.div(global_weights[key], len(clients))
 
-        # Update the global model with aggregated weights
+        # Update the global model_type with aggregated weights
         self.global_trainable.model.load_state_dict(global_weights, strict=True)
 
     def aggregate_FedMA(self, clients: list[Client]):
         # TODO: Implement Federated Matched Averaging (FedMA)
-        """ Aggregates the model weights from all clients using Federated Matched Averaging """
+        """ Aggregates the model_type weights from all clients using Federated Matched Averaging """
         pass
 
     def get_global_weights(self):
-        """Returns the global model's weights for distribution to clients."""
+        """Returns the global model_type's weights for distribution to clients."""
         return self.global_trainable.model.state_dict()

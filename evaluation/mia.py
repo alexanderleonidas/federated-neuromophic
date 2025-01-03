@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
 
 from data.dataset_loader import BatchDataset
-from models.single_trainable import Trainable
 from evaluation.evaluation import get_outputs
+from models.single_trainable import Trainable
 from utils.globals import device, VERBOSE, BATCH_SIZE
 
 
