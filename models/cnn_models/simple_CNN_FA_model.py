@@ -16,6 +16,8 @@ class FeedbackAlignmentCNN(SimpleCNN):
 
     def forward(self, x, **kwargs):
         # Store activations and pre-activations for use in backward pass
+        self.zero_grad()
+
         self.x = x
         self.z1 = self.conv1(x)
         self.a1 = F.relu(self.bn1(self.z1))

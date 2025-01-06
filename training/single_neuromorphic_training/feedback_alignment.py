@@ -41,7 +41,9 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
             # Forward pass
             outputs = trainable.model(images)
             loss = trainable.criterion(outputs, labels)
-            loss.backward()
+            # loss.backward()
+
+            trainable.model.feedback_alignment_backward(loss, labels)
 
             # Optimizer step
             trainable.optimizer.step()
