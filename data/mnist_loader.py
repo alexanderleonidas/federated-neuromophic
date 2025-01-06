@@ -2,7 +2,7 @@ from torchvision import datasets, transforms
 
 from data.dataset_loader import Dataset, BatchDataset, FederatedDataset, DifferentialPrivacyDataset
 from utils.globals import PATH_TO_ROOT, IMAGE_RESIZE, I_HAVE_DOWNLOADED_MNIST, BATCH_SIZE, VALIDATION_SPLIT, \
-    PATH_TO_MNIST, PATH_TO_DATA
+    PATH_TO_MNIST, PATH_TO_DATA, NUM_CLIENTS
 
 
 def get_augmentation_transform(img_size=IMAGE_RESIZE):
@@ -45,7 +45,7 @@ def load_mnist_batches_dp(validation_split=VALIDATION_SPLIT, shuffle_dataset=Tru
     return batches
 
 
-def load_mnist_clients(num_clients, shuffle_dataset=True, transform=get_transform(), validation_split=VALIDATION_SPLIT, batch_size=BATCH_SIZE):
+def load_mnist_clients(num_clients=NUM_CLIENTS, shuffle_dataset=True, transform=get_transform(), validation_split=VALIDATION_SPLIT, batch_size=BATCH_SIZE):
     dataset = extract_mnist(transform)
     clients = FederatedDataset(dataset, num_clients, validation_split, batch_size, shuffle_dataset)
     return clients

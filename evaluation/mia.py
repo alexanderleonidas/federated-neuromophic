@@ -3,26 +3,65 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset, random_split
+from torch.utils.data import DataLoader, TensorDataset, random_split, ConcatDataset
 from tqdm import tqdm
 
-from data.dataset_loader import BatchDataset
+from data.dataset_loader import BatchDataset, FederatedDataset, DifferentialPrivacyDataset
 from evaluation.evaluation import get_outputs
+from models.federated_trainable import FederatedTrainable
 from models.single_trainable import Trainable
 from utils.globals import device, VERBOSE, BATCH_SIZE
 
+
+def combine_batches_datasets(batch_datasets):
+    """
+    Combines multiple BatchDataset objects into a single BatchDataset.
+
+    :param batch_datasets: List of BatchDataset objects.
+    :return: A unified BatchDataset with combined train, validation, and test loaders.
+    """
+    # Concatenate datasets
+    train_datasets = [bd.train_loader.dataset for bd in batch_datasets]
+    val_datasets = [bd.validation_loader.dataset for bd in batch_datasets]
+
+    combined_train_dataset = ConcatDataset(train_datasets)
+    combined_val_dataset = ConcatDataset(val_datasets)
+
+    # Create loaders from the combined datasets
+    train_loader = DataLoader(combined_train_dataset, batch_size=BATCH_SIZE,shuffle=True)
+    val_loader = DataLoader(combined_val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    test_loader = batch_datasets[0].test_loader
+
+    # Return a new BatchDataset object
+    return train_loader, val_loader, test_loader
+
+def collect_target_model_data_federated(trainable:FederatedTrainable, federated_dataset:FederatedDataset):
+    global_train_loader, global_val_loader, global_test_loader = combine_batches_datasets(federated_dataset.client_loaders)
+
+    model = trainable.server.global_trainable.model
+
+    train_outputs, train_labels = get_outputs(model, global_train_loader)
+    val_outputs, val_labels = get_outputs(model, global_val_loader)
+    test_outputs, test_labels = get_outputs(model, global_test_loader)
+
+    # Member data
+    member_data = train_outputs.numpy()
+    member_labels = np.ones(len(member_data))
+
+    nonmember_outputs = torch.cat((val_outputs, test_outputs))
+    nonmember_data = nonmember_outputs.cpu().numpy()
+    nonmember_labels = np.zeros(len(nonmember_data))  # Label validation and test data as non-members
+
+    return member_data, member_labels, nonmember_data, nonmember_labels
 
 def collect_target_model_data(trainable:Trainable, batches_dataset:BatchDataset):
     train_loader = batches_dataset.train_loader
     val_loader = batches_dataset.validation_loader
     test_loader = batches_dataset.test_loader
 
-
-
     train_outputs, train_labels = get_outputs(trainable.model, train_loader)
     val_outputs, val_labels = get_outputs(trainable.model, val_loader)
     test_outputs, test_labels = get_outputs(trainable.model, test_loader)
-
 
     # Member data
     member_data = train_outputs.numpy()
@@ -83,7 +122,6 @@ def train_attack_model(attack_model, attack_train_loader):
         progress_bar.close()
 
 
-
 def evaluate_attack_model(attack_model, attack_test_loader):
     attack_model.eval()
     all_labels = []
@@ -102,8 +140,19 @@ def evaluate_attack_model(attack_model, attack_test_loader):
 
     return all_labels, all_preds
 
-def membership_inference_attack(trainable:Trainable, batches_dataset:BatchDataset):
-    target_model_data = collect_target_model_data(trainable, batches_dataset)
+def membership_inference_attack(trainable, dataset):
+
+    if isinstance(dataset, BatchDataset) or isinstance(dataset, DifferentialPrivacyDataset):
+        assert isinstance(trainable, Trainable)
+        target_model_data = collect_target_model_data(trainable, dataset)
+
+    elif isinstance(dataset, FederatedDataset):
+        assert isinstance(trainable, FederatedTrainable)
+        target_model_data = collect_target_model_data_federated(trainable, dataset)
+
+    else:
+        raise ValueError('Check the parameters which you called the methods with')
+
     attack_train_loader, attack_test_loader = prepare_attack_model_data(target_model_data)
 
     attack_model = AttackModel().to(device)
