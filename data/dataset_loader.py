@@ -1,7 +1,6 @@
 import numpy as np
 from opacus.utils.uniform_sampler import UniformWithReplacementSampler
-from torch.utils.data import DataLoader, SubsetRandomSampler, random_split
-
+from torch.utils.data import DataLoader, SubsetRandomSampler, random_split, ConcatDataset
 
 
 class Dataset:
@@ -81,6 +80,7 @@ class FederatedDataset(Dataset):
         client_sets = random_split(self.training_set, [len(self.training_set) // num_clients] * num_clients)
         client_ds = [Dataset(cs, dataset.testing_set) for cs in client_sets]
         return [BatchDataset(cds, self.val_split_ratio, self.batch_size, shuffle) for cds in client_ds]
+
 
 
 

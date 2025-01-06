@@ -3,36 +3,37 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, classification_report, roc_curve, auc
 
-from data.mnist_loader import load_mnist_batches
+from data.mnist_loader import load_mnist_batches, load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
 from evaluation.mia import membership_inference_attack
+from models.federated_trainable import FederatedTrainable
 from models.single_trainable import Trainable
+from training.federated_model_trainer import FederatedTrainer
 from training.single_model_trainer import Trainer
 from utils.globals import fa
 from utils.state import State
 
 # TODO: adapt to federated? Which client owns which data?
 
-state = State(neuromorphic=True, method=fa)
+state = State(neuromorphic=False, federated=True, method='backprop')
 
 # load dataset
-batches_dataset = load_mnist_batches()
+batches_dataset = load_mnist_clients()
 
 # load model_type components
-trainable = Trainable(state=state)
-trainer = Trainer(trainable=trainable, dataset=batches_dataset, state=state)
+trainable = FederatedTrainable(state=state)
+trainer = FederatedTrainer(trainable=trainable, dataset=batches_dataset, state=state)
 
 # train model_type
 trainer.train_model()
 
 # evaluate on test set
-test_metrics = evaluate_outputs(trainable.model, batches_dataset.test_loader)
+test_metrics = evaluate_outputs(trainer.global_model, batches_dataset.test_loader)
 final_metrics = test_metrics.get_results()
 
 # run MIA
 mia_labels, mia_preds = membership_inference_attack(trainable, batches_dataset)
 
-print(mia_labels, mia_preds)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Convert to numpy arrays
 all_labels = np.array(mia_labels)
