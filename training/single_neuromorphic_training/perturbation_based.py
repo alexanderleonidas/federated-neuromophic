@@ -40,13 +40,61 @@ def restore_original_data(trainable, original_params):
             param.data = original_params[name]
     return trainable
 
-def estimate_gradients(trainable, perturbations, loss_diff):
+def estimate_gradients(trainable, perturbations, loss_diff, p_std):
     for name, param in trainable.model.named_parameters():
         if param.requires_grad:
-            gradient_estimate = (loss_diff * perturbations[name]) / (2 * torch.sum(perturbations[name] ** 2))
+            # gradient_estimate = (loss_diff * perturbations[name]) / (2 * torch.sum(perturbations[name] ** 2))
+            gradient_estimate = (loss_diff/(p_std**2)) * perturbations[name]
             param.grad = gradient_estimate.clone()
 
     return trainable
+
+def perturbation_based_learning2(trainable, data_loader, data_indices, epoch_idx=None):
+    p_std = 1e-4
+    trainable.model.train()
+    running_loss = 0.0
+    correct = 0
+    total = 0
+    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
+    progress_desc += 'PB Training '
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
+
+    for images, labels in progress_bar:
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Forward pass with updated parameters for statistics
+        outputs, clean_loss = forward(trainable.model, trainable.criterion, images, labels)
+
+        # Zero the parameter gradients
+        trainable.optimizer.zero_grad()
+
+        # Create noise and apply to model
+        original_params, perturbations = create_parameters_perturbations(trainable, p_std)
+        trainable = apply_perturbations(trainable, original_params, perturbations, positive=True)
+
+        # Compute the noisy forward pass
+        noisy_outputs, noisy_loss = forward(trainable.model, trainable.criterion, images, labels)
+
+        # Reset parameters of model to original values
+        trainable = restore_original_data(trainable, original_params)
+
+        # Estimate weight update gradients
+        loss_diff = noisy_loss - clean_loss
+        trainable = estimate_gradients(trainable, perturbations, loss_diff, p_std)
+
+        trainable.optimizer.step()
+
+        batch_stats = update_progress_bar(images, labels, outputs, clean_loss, progress_bar)
+        running_loss += batch_stats[0]
+        correct += batch_stats[1]
+        total += batch_stats[2]
+
+    epoch_loss = running_loss / len(data_indices)
+    epoch_acc = 100 * correct / total
+    return epoch_loss, epoch_acc
+
+
 
 def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=None):
     trainable.model.train()
@@ -75,7 +123,6 @@ def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=
         trainable = apply_perturbations(trainable, original_params, perturbations, positive=True)
         outputs_p, loss_p = forward(trainable.model, trainable.criterion, images, labels)
 
-
         # Forward pass with negatively perturbed parameters
         trainable = apply_perturbations(trainable, original_params, perturbations, positive=False)
         outputs_n, loss_n = forward(trainable.model, trainable.criterion, images, labels)
@@ -96,47 +143,6 @@ def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=
         correct += batch_stats[1]
         total += batch_stats[2]
 
-
-    epoch_loss = running_loss / len(data_indices)
-    epoch_acc = 100 * correct / total
-    return epoch_loss, epoch_acc
-
-
-def perturbation_based_learning2(trainable, data_loader, data_indices, epoch_idx=None):
-    trainable.model.train()
-    running_loss = 0.0
-    correct = 0
-    total = 0
-    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
-    progress_desc += 'PB Training '
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
-
-    for images, labels in progress_bar:
-        images = images.to(device)
-        labels = labels.to(device)
-
-        # Forward pass with updated parameters for statistics
-        outputs, baseline_loss = forward(trainable.model, trainable.criterion, images, labels)
-
-        # Zero the parameter gradients
-        trainable.optimizer.zero_grad()
-
-
-        # LOGIC HERE
-        #
-        #
-        #
-        #
-        #
-        #
-
-
-        trainable.optimizer.step()
-
-        batch_stats = update_progress_bar(images, labels, outputs, baseline_loss, progress_bar)
-        running_loss += batch_stats[0]
-        correct += batch_stats[1]
-        total += batch_stats[2]
 
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
