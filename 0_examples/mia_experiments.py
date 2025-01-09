@@ -3,19 +3,18 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, classification_report, roc_curve, auc
 
-from data.mnist_loader import load_mnist_batches, load_mnist_clients
+from data.mnist_loader import load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
 from evaluation.mia import membership_inference_attack
 from models.federated_trainable import FederatedTrainable
-from models.single_trainable import Trainable
 from training.federated_model_trainer import FederatedTrainer
-from training.single_model_trainer import Trainer
-from utils.globals import fa
 from utils.state import State
 
 # TODO: adapt to federated? Which client owns which data?
 
 state = State(neuromorphic=False, federated=True, method='backprop')
+
+# In the federated case >>>>>>>>>>>> #################################################
 
 # load dataset
 batches_dataset = load_mnist_clients()
@@ -23,6 +22,8 @@ batches_dataset = load_mnist_clients()
 # load model_type components
 trainable = FederatedTrainable(state=state)
 trainer = FederatedTrainer(trainable=trainable, dataset=batches_dataset, state=state)
+
+######################################################################################
 
 # train model_type
 trainer.train_model()

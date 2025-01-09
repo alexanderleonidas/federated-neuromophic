@@ -1,6 +1,7 @@
 import json
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 directory = "../results/"
 file_name = "dp_epsilon0point1_training_scores"

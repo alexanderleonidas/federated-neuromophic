@@ -1,5 +1,7 @@
-from utils.globals import fa
-from utils.training_runner import run_neuromorphic_single, run_neuromorphic_fa_federated
+from utils.globals import pb
+from utils.state import State
+from utils.training_runner import run_single_model
 
 if __name__ == '__main__':
-    run_neuromorphic_fa_federated()
+    state = State(neuromorphic=True, method=pb)
+    run_single_model(state)

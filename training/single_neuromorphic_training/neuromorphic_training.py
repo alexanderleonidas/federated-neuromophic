@@ -2,7 +2,8 @@ import torch
 
 from training.single_backprop_training.batch_validation_training import run_one_epoch
 from training.single_neuromorphic_training.feedback_alignment import feedback_alignment_learning
-from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning
+from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning, \
+    perturbation_based_learning2
 from training.watchers.training_watcher import TrainingWatcher
 from utils.globals import pb, get_model_path, VERBOSE
 
@@ -57,7 +58,7 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
 
         # Run one epoch of training based on the chosen method
         if method == pb:
-            train_loss, train_acc = perturbation_based_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
+            train_loss, train_acc = perturbation_based_learning2(trainable, train_loader, train_indices, epoch_idx=epoch)
         else:
             train_loss, train_acc = feedback_alignment_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
 

@@ -4,7 +4,6 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
-import sys
 
 from utils.state import State
 
@@ -76,7 +75,7 @@ cudnn.benchmark = True
 
 # DATASET VARIABLES
 
-PATH_TO_ROOT = sys.path[1]
+PATH_TO_ROOT = ''
 PATH_TO_DATA = os.path.join(PATH_TO_ROOT, 'MNIST_DATA')
 PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
 PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
@@ -89,7 +88,7 @@ VALIDATION_SPLIT = 0.30
 
 # IMAGES
 IMAGE_RESIZE = (28, 28)     # smaller means faster but harder to interpret completely
-
+IMAGE_RESIZE_2 = 28 * 28
 # STATE
 
 pb = 'PERTURBATION_BASED'
@@ -98,6 +97,7 @@ fa = 'FEEDBACK_ALIGNMENT'
 # FEDERATED PARAMETERS
 NUM_CLIENTS = 3
 NUM_ROUNDS = 5
+DISJOINT_RATIO = 0
 
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4

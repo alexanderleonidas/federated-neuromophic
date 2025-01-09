@@ -1,5 +1,5 @@
 class State:
-    def __init__(self, federated=False, fed_type='entire', neuromorphic=False, method='backprop', save_model=False, model_type='cnn'):
+    def __init__(self, federated=False, fed_type='entire', neuromorphic=False, method='backprop', save_model=False, model_type='ann'):
         self.federated = federated
         self.fed_type = fed_type
         self.neuromorphic = neuromorphic
