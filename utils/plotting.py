@@ -38,7 +38,7 @@ def plot_accuracy_curve(ax, x, training_scores):
     ax.plot(x, training_scores['Validation Accuracy'], label='Validation Accuracy', color=dfc[1])
 
 
-def plot_clients_learning_curves(client_round_watcher: FederatedTrainingWatcher,num_epochs=MAX_EPOCHS*NUM_ROUNDS):
+def plot_clients_learning_curves(client_round_watcher:FederatedTrainingWatcher, num_epochs=MAX_EPOCHS*NUM_ROUNDS):
 
     stacked_client_scores = stack_client_scores(client_round_watcher.round_records)
 
@@ -100,6 +100,7 @@ def plot_clients_learning_curves(client_round_watcher: FederatedTrainingWatcher,
 
 
 def stack_client_scores(round_records):
+
     client_scores = {}
 
     for client_id in range(NUM_CLIENTS):
@@ -112,7 +113,8 @@ def stack_client_scores(round_records):
 
     for round_num in range(NUM_ROUNDS):
         for client_id in range(NUM_CLIENTS):
-            scores = round_records[f'{round_num}'][f'{client_id}']
+            # scores = round_records[f'{round_num}'][f'{client_id}']
+            scores = round_records[round_num][client_id]
             for key in ['Training Loss', 'Validation Loss', 'Training Accuracy', 'Validation Accuracy']:
                 client_scores[client_id][key].extend(scores[key])
 

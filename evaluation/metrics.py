@@ -22,7 +22,7 @@ class Metrics:
         Updates the metric counters based on model_type outputs and true labels.
 
         Args:
-            outputs (torch.Tensor): The raw outputs from the model_type (logits).
+            outputs (torch.Tensor): The raw outputs from the model_type (outputs).
             labels (torch.Tensor): The ground truth labels.
         """
         _, predicted = torch.max(outputs.data, 1)

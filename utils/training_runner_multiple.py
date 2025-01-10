@@ -89,7 +89,7 @@ def get_federated_model_running_fn(state):
         elif state.method == fa: return run_neuromorphic_fa_federated
     else:
         if state.method == 'back_dp':  return run_back_dp_federated
-        elif state.method == 'backprop':return run_federated_training
+        elif state.method == 'backprop':return run_federated_model
 
 def run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, training_fn, extract_results):
     all_training_scores = []

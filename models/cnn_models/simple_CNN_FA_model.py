@@ -39,7 +39,7 @@ class FeedbackAlignmentCNN(SimpleCNN):
         self.zero_grad()
         batch_size = self.z4.size(0)
 
-        # Compute gradient of loss w.r.t. z4 (output logits)
+        # Compute gradient of loss w.r.t. z4 (output outputs)
         probs = F.softmax(self.z4, dim=1)
         targets_one_hot = F.one_hot(labels, num_classes=probs.size(1)).float().to(labels.device)
 

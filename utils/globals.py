@@ -4,7 +4,6 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
-import sys
 
 from utils.state import State
 
@@ -14,6 +13,7 @@ VERBOSE = True
 def load_device():
     if torch.cuda.is_available():
         return torch.device('cuda')
+
     if not torch.backends.mps.is_available():
         if not torch.backends.mps.is_built():
             print("MPS not available because the current PyTorch install was not "
@@ -34,10 +34,16 @@ def get_standard_training_parameters(model):
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
     return criterion, optimizer, scheduler
 
+def get_fa_training_parameters(model):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=1e-3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
+    return criterion, optimizer, scheduler
+
 def get_pb_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.05, weight_decay=1e-3)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.02, weight_decay=1e-3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
     return criterion, optimizer, scheduler
 
 def get_next_model_number_path(directory_path):
@@ -76,20 +82,20 @@ cudnn.benchmark = True
 
 # DATASET VARIABLES
 
-PATH_TO_ROOT = sys.path[1]
+PATH_TO_ROOT = ''
 PATH_TO_DATA = os.path.join(PATH_TO_ROOT, 'MNIST_DATA')
 PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
 PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 10
+MAX_EPOCHS = 3
 NUM_CLASSES = 10
 BATCH_SIZE = 128
 VALIDATION_SPLIT = 0.30
 
 # IMAGES
 IMAGE_RESIZE = (28, 28)     # smaller means faster but harder to interpret completely
-
+IMAGE_RESIZE_2 = 28 * 28
 # STATE
 
 pb = 'PERTURBATION_BASED'
@@ -97,7 +103,8 @@ fa = 'FEEDBACK_ALIGNMENT'
 
 # FEDERATED PARAMETERS
 NUM_CLIENTS = 3
-NUM_ROUNDS = 3
+NUM_ROUNDS = 5
+DISJOINT_RATIO = 0
 
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4

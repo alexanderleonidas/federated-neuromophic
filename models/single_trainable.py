@@ -1,13 +1,13 @@
 from builtins import Exception
 
 from opacus.privacy_engine import PrivacyEngine
-from torchvision import models
 
 from data.dataset_loader import DifferentialPrivacyDataset
+from models.ann_models.Simple_ANN_FA_model import DFAModel
+from models.ann_models.Simple_ANN_model import SimpleANN
 from models.cnn_models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.cnn_models.simple_CNN_dp import DPSuitableCNN
 from models.cnn_models.simple_CNN_model import SimpleCNN
-from models.snn_models.simple_SNN_model import SimpleSNN
 from utils.globals import *
 
 USE_RESNET_MODEL = False
@@ -45,60 +45,37 @@ class Trainable:
 
         
     def __load_components__(self, state):
+        if state.model_type == 'ann':
+            if state.federated: self.load_federated_ann__(state)
+            else: self.__load_single_ann__(state)
 
-        if state.model_type == 'snn':
-            # TODO: dfa here? and what else?
-            supported = (state.method == 'backprop') and (state.neuromorphic == False) and (state.federated == False)
-            if supported: self.__load_simple_snn_model__()
-            else: raise Exception('Not Implemented yet')
+        elif state.model_type == 'cnn':
+            if state.federated: self.__load_federated_cnn__(state)
+            else: self.__load_single_cnn__(state)
+
+
+    def __load_federated_cnn__(self, state):
+        if state.fed_type == 'entire':
+            return
+        elif state.fed_type == 'client':
+            self.__load_simple_cnn_model__()  # (1)
+        elif state.fed_type == 'server':  #
+            self.__load_simple_cnn_model__()  # (2)
         else:
-            if state.federated: self.__load_federated__(state)
-            else: self.__load_single__(state)
+            raise Exception('Not Supposed to do this')
 
-
-    def __load_federated__(self, state):
-        if state.neuromorphic:
-            raise Exception('Not Implemented yet')
-        else:
-            if state.fed_type == 'entire':
-                return
-            elif state.fed_type == 'client':
-                self.__load_simple_cnn_model__()  # (1)
-            elif state.fed_type == 'server':  #
-                self.__load_simple_cnn_model__()  # (2)
-            else:
-                raise Exception('Not Supposed to do this')
-
-    def __load_single__(self, state):
+    def __load_single_cnn__(self, state):
         if state.neuromorphic: self.__load_simple_cnn_neuromorphic_model__()
         else:
-            if USE_RESNET_MODEL:
-                self.__load_resnet_model__()
+            if state.method == 'backprop':
+                self.__load_simple_cnn_model__()
+            elif state.method == 'backprop-dp':
+                self.__load_simple_cnn_dp_model__()
             else:
-                if state.method == 'backprop':
-                    self.__load_simple_cnn_model__()
-                elif state.method == 'backprop-dp':
-                    self.__load_simple_cnn_dp_model__()
-                else:
-                    raise Exception('Not Implemented yet')
-
-    def __load_resnet_model__(self, pretrained=USE_RESNET_PRETRAINED):
-        # Load a non-pretrained ResNet18 model_type for its architecture ** works with images (224,224) **
-        model = models.resnet18(pretrained=pretrained)
-
-        # Modify the final layer to match the number of classes in MNIST
-        num_features = model.fc.in_features
-        model.fc = nn.Linear(num_features, 10)  # MNIST has 10 classes (digits 0-9)
-
-        self.model = model.to(device)
-        self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
+                raise Exception('Not Implemented yet')
 
     def __load_simple_cnn_model__(self, img_size=IMAGE_RESIZE):
         self.model = SimpleCNN(img_size).to(device)
-        self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
-
-    def __load_simple_snn_model__(self):
-        self.model = SimpleSNN().to(device)
         self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
 
     def __load_simple_cnn_dp_model__(self, img_size=IMAGE_RESIZE):
@@ -113,8 +90,48 @@ class Trainable:
             self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
         elif method == fa:
             self.model = FeedbackAlignmentCNN(img_size).to(device)
-            self.criterion, self.optimizer, self.scheduler = get_pb_training_parameters(self.model)
+            self.criterion, self.optimizer, self.scheduler = get_fa_training_parameters(self.model)
         else:
             raise Exception('Non valid method, unable to load model_type')
 
-        # Move the model_type to the appropriate device
+    def __load_simple_ann_model__(self, img_size=IMAGE_RESIZE):
+        self.model = SimpleANN(img_size).to(device)
+        self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
+
+    def __load_single_ann__(self, state):
+        if state.neuromorphic:
+            self.__load_simple_ann_neuromorphic_model__()
+        else:
+            if state.method == 'backprop':
+                self.__load_simple_ann_model__()
+            elif state.method == 'backprop-dp':
+                self.__load_simple_ann_dp_model__()
+            else:
+                raise ValueError(f'Unknown method {state.method} for non neuromorphic model settings, \n'
+                                 f'available are: [\'backprop\', \'backprop-dp\']')
+
+    def __load_simple_ann_neuromorphic_model__(self, img_size=IMAGE_RESIZE, method=None):
+        if method is None:
+            method = self.state.method
+        if method == pb:
+            self.model = SimpleANN(img_size).to(device)
+            self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
+        elif method == fa:
+            self.model = DFAModel(img_size).to(device)
+            self.criterion, self.optimizer, self.scheduler = get_fa_training_parameters(self.model)
+        else:
+            raise Exception('Non valid method, unable to load model_type')
+
+    def __load_simple_ann_dp_model__(self, img_size=IMAGE_RESIZE):
+        raise Exception('Not Implemented yet')
+
+    def load_federated_ann__(self, state):
+        if state.fed_type == 'entire':
+            return
+        elif state.fed_type == 'client':
+            self.__load_simple_cnn_model__()  # (1)
+        elif state.fed_type == 'server':  #
+            self.__load_simple_cnn_model__()  # (2)
+        else:
+            raise Exception('Not Supposed to do this')
+
