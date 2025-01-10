@@ -49,6 +49,107 @@ def estimate_gradients(trainable, perturbations, loss_diff, p_std):
 
     return trainable
 
+def estimate_gradients_np(trainable, perturbations, intermediates, loss_diff, p_std):
+    with torch.no_grad():
+        for i, (name, noise) in enumerate(perturbations.items()):
+            matrix = torch.matmul(torch.transpose(perturbations[name], 0, 1), intermediates[i])
+            update = (loss_diff/(p_std**2)) * matrix
+            # Apply updates
+            if 'fc1' in name:
+                trainable.model.fc1.weight.grad = update
+            elif 'fc2' in name:
+                trainable.model.fc2.weight.grad = update
+            elif 'fc3' in name:
+                trainable.model.fc3.weight.grad = update
+
+    return trainable
+
+def perturbation_based_learning2(trainable, data_loader, data_indices, epoch_idx=None):
+    p_std = 1e-4
+    trainable.model.train()
+    running_loss = 0.0
+    correct = 0
+    total = 0
+    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
+    progress_desc += 'PB Training '
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
+
+    for images, labels in progress_bar:
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Forward pass with updated parameters for statistics
+        outputs, clean_loss = forward(trainable.model, trainable.criterion, images, labels)
+
+        # Zero the parameter gradients
+        trainable.optimizer.zero_grad()
+
+        # Create noise and apply to model
+        original_params, perturbations = create_parameters_perturbations(trainable, p_std)
+        trainable = apply_perturbations(trainable, original_params, perturbations, positive=True)
+
+        # Compute the noisy forward pass
+        noisy_outputs, noisy_loss = forward(trainable.model, trainable.criterion, images, labels)
+
+        # Reset parameters of model to original values
+        trainable = restore_original_data(trainable, original_params)
+
+        # Estimate weight update gradients
+        loss_diff = noisy_loss - clean_loss
+        trainable = estimate_gradients(trainable, perturbations, loss_diff, p_std)
+
+        trainable.optimizer.step()
+
+        batch_stats = update_progress_bar(images, labels, outputs, clean_loss, progress_bar)
+        running_loss += batch_stats[0]
+        correct += batch_stats[1]
+        total += batch_stats[2]
+
+    epoch_loss = running_loss / len(data_indices)
+    epoch_acc = 100 * correct / total
+    return epoch_loss, epoch_acc
+
+
+def node_pb_learning(trainable, noisy_trainable, data_loader, data_indices, epoch_idx=None):
+    """
+    This method is to be used with the Simple_ANN_NodePB_model.py that performs
+    node perturbation
+    """
+    p_std = 1e-4
+    trainable.model.train()
+    noisy_trainable.eval()
+    running_loss = 0.0
+    correct = 0
+    total = 0
+    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
+    progress_desc += 'PB Training '
+    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
+    for images, labels in progress_bar:
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Forward pass with updated parameters for statistics
+        outputs, clean_loss = forward(trainable.model, trainable.criterion, images, labels)
+
+        # Zero the parameter gradients
+        trainable.optimizer.zero_grad()
+
+        # Create noise and apply to model
+        original_params, perturbations = create_parameters_perturbations(trainable, p_std)
+        noisy_trainable.model.load_state_dict(trainable.model.state_dict())
+        outputs, intermediates = noisy_trainable.model(images, perturbations)
+        noisy_loss = noisy_trainable.criterion(outputs, labels)
+
+        # Node perturbation weight update
+        trainable = estimate_gradients_np(trainable, intermediates, perturbations)
+
+        trainable.optimizer.step()
+
+    epoch_loss = running_loss / len(data_indices)
+    epoch_acc = 100 * correct / total
+    return epoch_loss, epoch_acc
+
+
 def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=None):
     trainable.model.train()
     running_loss = 0.0
@@ -96,81 +197,6 @@ def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=
         correct += batch_stats[1]
         total += batch_stats[2]
 
-
-    epoch_loss = running_loss / len(data_indices)
-    epoch_acc = 100 * correct / total
-    return epoch_loss, epoch_acc
-
-def perturbation_based_learning2(trainable, data_loader, data_indices, epoch_idx=None):
-    p_std = 1e-4
-    trainable.model.train()
-    running_loss = 0.0
-    correct = 0
-    total = 0
-    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
-    progress_desc += 'PB Training '
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
-
-    for images, labels in progress_bar:
-        images = images.to(device)
-        labels = labels.to(device)
-
-        # Forward pass with updated parameters for statistics
-        outputs, clean_loss = forward(trainable.model, trainable.criterion, images, labels)
-
-        # Zero the parameter gradients
-        trainable.optimizer.zero_grad()
-
-        # Create noise and apply to model
-        original_params, perturbations = create_parameters_perturbations(trainable, p_std)
-        trainable = apply_perturbations(trainable, original_params, perturbations, positive=True)
-
-        # Compute the noisy forward pass
-        noisy_outputs, noisy_loss = forward(trainable.model, trainable.criterion, images, labels)
-
-        # Reset parameters of model to original values
-        trainable = restore_original_data(trainable, original_params)
-
-        # Estimate weight update gradients
-        loss_diff = noisy_loss - clean_loss
-        trainable = estimate_gradients(trainable, perturbations, loss_diff, p_std)
-
-        trainable.optimizer.step()
-
-        batch_stats = update_progress_bar(images, labels, outputs, clean_loss, progress_bar)
-        running_loss += batch_stats[0]
-        correct += batch_stats[1]
-        total += batch_stats[2]
-
-    epoch_loss = running_loss / len(data_indices)
-    epoch_acc = 100 * correct / total
-    return epoch_loss, epoch_acc
-
-def perturbation_based_learning3(trainable, data_loader, data_indices, epoch_idx=None):
-    trainable.model.train()
-    running_loss = 0.0
-    correct = 0
-    total = 0
-    progress_desc = f'Epoch {epoch_idx + 1}/{MAX_EPOCHS}\t' if epoch_idx is not None else ''
-    progress_desc += 'PB Training '
-    progress_bar = tqdm(data_loader, desc=progress_desc, leave=True, disable=not VERBOSE)
-
-    for images, labels in progress_bar:
-        images = images.to(device)
-        labels = labels.to(device)
-
-        # Forward pass with updated parameters for statistics
-        outputs, loss = forward(trainable.model, trainable.criterion, images, labels)
-
-        # ....
-        trainable.model.perturbation_based_backward(images, outputs, labels, loss)
-
-        trainable.optimizer.step()
-
-        batch_stats = update_progress_bar(images, labels, outputs, loss, progress_bar)
-        running_loss += batch_stats[0]
-        correct += batch_stats[1]
-        total += batch_stats[2]
 
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
