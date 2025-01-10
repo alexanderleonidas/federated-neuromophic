@@ -2,7 +2,7 @@ from torchvision import datasets, transforms
 
 from data.dataset_loader import Dataset, BatchDataset, FederatedDataset, DifferentialPrivacyDataset
 from utils.globals import IMAGE_RESIZE, I_HAVE_DOWNLOADED_MNIST, BATCH_SIZE, VALIDATION_SPLIT, \
-    PATH_TO_DATA, NUM_CLIENTS, PATH_TO_MNIST
+    PATH_TO_DATA, NUM_CLIENTS
 
 
 def get_augmentation_transform(img_size=IMAGE_RESIZE):

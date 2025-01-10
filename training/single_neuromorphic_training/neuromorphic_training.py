@@ -1,35 +1,13 @@
+import numpy as np
 import torch
+from matplotlib import pyplot as plt
 
 from training.single_backprop_training.batch_validation_training import run_one_epoch
 from training.single_neuromorphic_training.feedback_alignment import feedback_alignment_learning
-from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning, \
-    perturbation_based_learning2
+from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning2
 from training.watchers.training_watcher import TrainingWatcher
-from utils.globals import pb, get_model_path, VERBOSE
+from utils.globals import pb, get_model_path, VERBOSE, fa, MAX_EPOCHS
 
-
-# For each epoch:
-#     For each training sample (input x, target y):
-#         Forward pass:
-#             Compute the network output y_pred = f(x; weights)
-#             Compute loss L = loss_function(y_pred, y)
-#
-#         For each parameter w in the network:
-#             Save the original parameter value w_orig
-#             Generate a small random perturbation delta_w
-#             Perturb the parameter: w_perturbed = w_orig + delta_w
-#             Forward pass with perturbed parameter:
-#                 Compute y_perturbed = f(x; weights_perturbed)
-#                 Compute perturbed loss L_perturbed = loss_function(y_perturbed, y)
-#             Estimate gradient:
-#                 grad_estimate = (L_perturbed - L) * delta_w / (delta_w^2)
-#             Update parameter:
-#                 w_new = w_orig - learning_rate * grad_estimate
-#             Restore the original parameter for the next iteration
-#
-#     Validate the model_type on the validation set:
-#         Compute validation loss and performance metrics
-#
 
 def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
     """
@@ -52,6 +30,8 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
     val_indices = batches_dataset.val_indices
 
     training_watcher = TrainingWatcher()
+    a1 = []
+    a2 = []
 
     for epoch in range(num_epochs):
         trainable.model.train()
@@ -60,7 +40,9 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
         if method == pb:
             train_loss, train_acc = perturbation_based_learning2(trainable, train_loader, train_indices, epoch_idx=epoch)
         else:
-            train_loss, train_acc = feedback_alignment_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
+            train_loss, train_acc, angle1, angle2 = feedback_alignment_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
+            a1.append(np.mean(angle1))
+            a2.append(np.mean(angle2))
 
         trainable.scheduler.step()
         # Run one epoch of validation using standard validation method
@@ -77,5 +59,16 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
             print(f'Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}% | '
                   f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%\n')
 
+    if method == fa:
+        x = np.arange(1, MAX_EPOCHS+1)
+        plt.plot(x, a1, color='blue', label='FC1')
+        plt.plot(x, a2, color='green', label='FC2')
+        plt.xlabel('Epochs')
+        plt.ylabel('Alignment')
+        plt.title('Feedback Alignment Similarity Angles')
+        plt.legend()
+        plt.ylim([-1,1])
+        plt.xlim([1, MAX_EPOCHS])
+        plt.show()
 
     return training_watcher.get_records()

@@ -71,7 +71,7 @@ class FederatedDataset(Dataset):
         self.num_clients = num_clients
         self.val_split_ratio = val_split_ratio
         self.batch_size = batch_size
-        self.client_loaders = self.mixed_split_clients(dataset, self.num_clients, shuffle)
+        self.client_loaders = self.uniform_split_clients(dataset, self.num_clients, shuffle)
         self.test_loader = DataLoader(dataset.testing_set, batch_size=batch_size, shuffle=False)
 
         self.num_test_samples = len(dataset.testing_set)

@@ -30,6 +30,9 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
     progress_desc += 'FA Training'
     progress_bar = tqdm(data_loader, desc=progress_desc, leave=False, disable=not VERBOSE)
 
+    angle1 = []
+    angle2 = []
+
     with torch.set_grad_enabled(True):  # Ensure gradients are enabled for training
         for images, labels in progress_bar:
             images = images.to(device)
@@ -42,8 +45,9 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
             outputs = trainable.model(images)
             loss = trainable.criterion(outputs, labels)
 
-            # loss.backward()
-            trainable.model.feedback_alignment_backward(loss, labels)
+            a1, a2 = trainable.model.feedback_alignment_backward(loss)
+            angle1.append(a1)
+            angle2.append(a2)
 
             # Optimizer step
             trainable.optimizer.step()
@@ -56,4 +60,4 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
 
-    return epoch_loss, epoch_acc
+    return epoch_loss, epoch_acc, angle1, angle2

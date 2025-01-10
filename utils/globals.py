@@ -13,6 +13,7 @@ VERBOSE = True
 def load_device():
     if torch.cuda.is_available():
         return torch.device('cuda')
+
     if not torch.backends.mps.is_available():
         if not torch.backends.mps.is_built():
             print("MPS not available because the current PyTorch install was not "
@@ -31,6 +32,12 @@ def get_standard_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
+    return criterion, optimizer, scheduler
+
+def get_fa_training_parameters(model):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=1e-3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
     return criterion, optimizer, scheduler
 
 def get_pb_training_parameters(model):

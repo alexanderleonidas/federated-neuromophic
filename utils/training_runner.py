@@ -12,6 +12,8 @@ from utils.state import State
 # SINGLE MODEL - BACKPROP BY DEFAULT
 def run_single_model(state=None):
     if state is None:  state = State()
+    else:
+        assert not state.federated
 
     # load dataset
     batches_dataset = load_mnist_batches()
@@ -59,9 +61,11 @@ def run_neuromorphic_fa_single():
 #  v   FEDERATED MODEL RUNNING   v
 
 # FEDERATED - BACKPROP BY DEFAULT
-def run_federated_training(state):
+def run_federated_model(state):
     if not state:
         state = State(federated=True, fed_type='entire')
+    else:
+        assert state.federated
 
     clients_dataset = load_mnist_clients(NUM_CLIENTS)
 
@@ -83,17 +87,17 @@ def run_federated_training(state):
 # FEDERATED - BACKPROP with DIFFERENTIAL PRIVACY
 def run_back_dp_federated():
     state = State(federated=True, fed_type='entire', method='backprop_dp')
-    return run_federated_training(state)
+    return run_federated_model(state)
 
 # FEDERATED - PERTURBATION BASED
 def run_neuromorphic_pb_federated():
     state = State(federated=True, fed_type='entire', neuromorphic=True, method=pb)
-    return run_federated_training(state)
+    return run_federated_model(state)
 
 # FEDERATED - FEEDBACK ALIGNMENT
 def run_neuromorphic_fa_federated():
     state = State(federated=True, fed_type='entire', neuromorphic=True, method=fa)
-    return run_federated_training(state)
+    return run_federated_model(state)
 
 
 # run_normal_single()

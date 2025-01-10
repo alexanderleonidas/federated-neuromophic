@@ -45,9 +45,8 @@ class Trainable:
 
         
     def __load_components__(self, state):
-
         if state.model_type == 'ann':
-            if state.federated: raise Exception('Not Implemented yet')
+            if state.federated: self.load_federated_ann__(state)
             else: self.__load_single_ann__(state)
 
         elif state.model_type == 'cnn':
@@ -56,17 +55,14 @@ class Trainable:
 
 
     def __load_federated_cnn__(self, state):
-        if state.neuromorphic:
-            raise Exception('Not Implemented yet')
+        if state.fed_type == 'entire':
+            return
+        elif state.fed_type == 'client':
+            self.__load_simple_cnn_model__()  # (1)
+        elif state.fed_type == 'server':  #
+            self.__load_simple_cnn_model__()  # (2)
         else:
-            if state.fed_type == 'entire':
-                return
-            elif state.fed_type == 'client':
-                self.__load_simple_cnn_model__()  # (1)
-            elif state.fed_type == 'server':  #
-                self.__load_simple_cnn_model__()  # (2)
-            else:
-                raise Exception('Not Supposed to do this')
+            raise Exception('Not Supposed to do this')
 
     def __load_single_cnn__(self, state):
         if state.neuromorphic: self.__load_simple_cnn_neuromorphic_model__()
@@ -94,10 +90,9 @@ class Trainable:
             self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
         elif method == fa:
             self.model = FeedbackAlignmentCNN(img_size).to(device)
-            self.criterion, self.optimizer, self.scheduler = get_pb_training_parameters(self.model)
+            self.criterion, self.optimizer, self.scheduler = get_fa_training_parameters(self.model)
         else:
             raise Exception('Non valid method, unable to load model_type')
-
 
     def __load_simple_ann_model__(self, img_size=IMAGE_RESIZE):
         self.model = SimpleANN(img_size).to(device)
@@ -123,10 +118,20 @@ class Trainable:
             self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
         elif method == fa:
             self.model = DFAModel(img_size).to(device)
-            self.criterion, self.optimizer, self.scheduler = get_pb_training_parameters(self.model)
+            self.criterion, self.optimizer, self.scheduler = get_fa_training_parameters(self.model)
         else:
             raise Exception('Non valid method, unable to load model_type')
 
     def __load_simple_ann_dp_model__(self, img_size=IMAGE_RESIZE):
         raise Exception('Not Implemented yet')
+
+    def load_federated_ann__(self, state):
+        if state.fed_type == 'entire':
+            return
+        elif state.fed_type == 'client':
+            self.__load_simple_cnn_model__()  # (1)
+        elif state.fed_type == 'server':  #
+            self.__load_simple_cnn_model__()  # (2)
+        else:
+            raise Exception('Not Supposed to do this')
 
