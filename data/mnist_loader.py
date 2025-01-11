@@ -29,8 +29,8 @@ def get_transform(img_size=IMAGE_RESIZE):
 def extract_mnist(transform):
     print(PATH_TO_DATA)
     # Download and load the training and test datasets
-    train_dataset = datasets.MNIST(root=PATH_TO_DATA, train=True, download=not I_HAVE_DOWNLOADED_MNIST, transform=transform)
-    test_dataset = datasets.MNIST(root=PATH_TO_DATA, train=False, download=not I_HAVE_DOWNLOADED_MNIST, transform=transform)
+    train_dataset = datasets.MNIST(root=PATH_TO_DATA, train=True, download=True, transform=transform)
+    test_dataset = datasets.MNIST(root=PATH_TO_DATA, train=False, download=True, transform=transform)
     return Dataset(train_dataset, test_dataset)
 
 

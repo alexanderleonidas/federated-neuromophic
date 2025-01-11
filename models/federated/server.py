@@ -11,7 +11,8 @@ class Server:
             federated=False,        # now should be False, although this model_type doesn't train anyway
             fed_type='server',
             neuromorphic=state.neuromorphic,
-            method=state.method
+            method=state.method,
+            save_model=state.save_model
         )
         self.global_trainable = Trainable(state=self.state)
 

@@ -38,7 +38,7 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
 
         # Run one epoch of training based on the chosen method
         if method == pb:
-            train_loss, train_acc = perturbation_based_learning2(trainable, train_loader, train_indices, epoch_idx=epoch)
+            train_loss, train_acc = perturbation_based_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
         else:
             train_loss, train_acc, angle1, angle2 = feedback_alignment_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
             a1.append(np.mean(angle1))
@@ -50,14 +50,19 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
 
         training_watcher.record_epoch(train_loss, train_acc, val_loss, val_acc)
 
-        if training_watcher.is_best_accuracy() and trainable.state.save_model:
-            torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
+        # if training_watcher.is_best_accuracy() and trainable.state.save_model:
+        #     torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
         # Print epoch statistics
         if VERBOSE:
             print(f'Current Learning Rate: {trainable.scheduler.get_last_lr()[0]:.6f}')
             print(f'Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}% | '
                   f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%\n')
+
+    # I assume that the model trained to the last epoch is the best
+    # This is to not waste time on other considerations as overfitting
+    if trainable.state.save_model:
+        torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
     if method == fa:
         x = np.arange(1, MAX_EPOCHS+1)

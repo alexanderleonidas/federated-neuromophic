@@ -43,7 +43,7 @@ class Trainable:
         dataset.training_set = dataloader
         self.privacy_engine = engine
 
-        
+
     def __load_components__(self, state):
         if state.model_type == 'ann':
             if state.federated: self.load_federated_ann__(state)
@@ -82,6 +82,7 @@ class Trainable:
         self.model = DPSuitableCNN(img_size).to(device)
         self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
 
+
     def __load_simple_cnn_neuromorphic_model__(self, img_size=IMAGE_RESIZE, method=None):
         if method is None:
             method = self.state.method
@@ -102,9 +103,9 @@ class Trainable:
         if state.neuromorphic:
             self.__load_simple_ann_neuromorphic_model__()
         else:
-            if state.method == 'backprop':
+            if state.method == bp:
                 self.__load_simple_ann_model__()
-            elif state.method == 'backprop-dp':
+            elif state.method == dp:
                 self.__load_simple_ann_dp_model__()
             else:
                 raise ValueError(f'Unknown method {state.method} for non neuromorphic model settings, \n'

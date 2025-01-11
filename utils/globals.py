@@ -59,11 +59,11 @@ def get_next_model_number_path(directory_path):
 def get_model_path(state: State):
     # MODEL TYPE
     neuromorphic = 'NEURO' if state.neuromorphic else 'NORMAL'
-    federated = 'FEDERATED' if state.federated else 'SINGLE'
+    federated = 'FEDERATED' if state.fed_type == 'client' else 'SINGLE'
     method = state.method
 
     # MODEL SAVING
-    model_directory = f'../saved_models/{federated}/{neuromorphic}/{method}'
+    model_directory = f'./saved_models/{federated}/{neuromorphic}/{method}'
 
     if not os.path.exists(model_directory):
         os.makedirs(model_directory, exist_ok=True)
@@ -88,7 +88,7 @@ PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
 PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 3
+MAX_EPOCHS = 10
 NUM_CLASSES = 10
 BATCH_SIZE = 128
 VALIDATION_SPLIT = 0.30
@@ -100,15 +100,17 @@ IMAGE_RESIZE_2 = 28 * 28
 
 pb = 'PERTURBATION_BASED'
 fa = 'FEEDBACK_ALIGNMENT'
+bp = 'backprop'
+dp = 'backprop-dp'
 
 # FEDERATED PARAMETERS
-NUM_CLIENTS = 3
-NUM_ROUNDS = 5
+NUM_CLIENTS = 2
+NUM_ROUNDS = 2
 DISJOINT_RATIO = 0
 
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4
 MAX_GRAD_NORM = 1.0
-TARGET_EPSILON = 10
+TARGET_EPSILON = 0.1
 TARGET_DELTA = 2e-5  # Typically set to 1 / (number of training samples)
 

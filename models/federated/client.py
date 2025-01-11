@@ -9,7 +9,8 @@ class Client:
             federated=False,      # supposedly it was True, now has to be false to make it work single model_type
             fed_type='client',
             neuromorphic=state.neuromorphic,
-            method=state.method
+            method=state.method,
+            save_model=state.save_model
         )
         self.local_model = Trainable(state=self.state)
 

@@ -1,11 +1,11 @@
 import json
 import os
 
-from training_runner import *
+from utils.training_runner import *
 from utils.plotting import plot_clients_learning_curves_multiple_runs, plot_runs_mean_with_std
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-NUM_RUNS = -1       # The total num of runs :
+NUM_RUNS = 3      # The total num of runs : (NUM_RUNS - 1) *actually in practice
 # the total runs that you want to run
 # if the file has already existing runs, then the start will be from the last iteration,
 # until NUM_RUNS is reached
@@ -14,7 +14,7 @@ NUM_RUNS = -1       # The total num of runs :
 MAX_RUNS_FED = 50           # mostly to stick to file naming being the same
 MAX_RUNS_SINGLE = 100
 
-results_path = '../results' # results directory
+results_path = './results'  # results directory
 
 extra_suffix = ''                  # if you have extra parameters you want to test for the same combination
 # extra_suffix = '_3c10e3r'        # example for 3 clients 10 epochs 3 rounds
@@ -91,7 +91,7 @@ def get_federated_model_running_fn(state):
         if state.method == 'back_dp':  return run_back_dp_federated
         elif state.method == 'backprop':return run_federated_model
 
-def run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, training_fn, extract_results):
+def run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, state, extract_results):
     all_training_scores = []
     all_final_metrics = []
 
@@ -117,7 +117,10 @@ def run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_i
 
     for i in range(first_iteration, iterations):
         print(f'Starting iteration {i}')
-        final_metrics, training_scores = training_fn()
+        if state.federated:
+            final_metrics, training_scores = run_federated_model(state)
+        else:
+            final_metrics, training_scores = run_single_model(state)
         del final_metrics['confusion_matrix']
         all_final_metrics.append(final_metrics)
         all_training_scores.append(training_scores)
@@ -155,20 +158,18 @@ def get_single_model_running_fn(state):
 def run_multiple_federated(state):
     assert state.federated
     training_scores_file, loaded_scores, last_iteration = load_recorded_scores(state)
-    training_fn = get_federated_model_running_fn(state)
-    extract_results = lambda x: x.round_scores
+    extract_results = lambda x: x.round_records
 
-    run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, training_fn, extract_results)
+    run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, state, extract_results)
 
     return training_scores_file, loaded_scores, last_iteration
 
 def run_multiple_single_model(state):
     assert not state.federated
     training_scores_file, loaded_scores, last_iteration = load_recorded_scores(state)
-    training_fn = get_single_model_running_fn(state)
     extract_results = lambda x: x
 
-    run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, training_fn, extract_results)
+    run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, state, extract_results)
 
     return training_scores_file, loaded_scores, last_iteration
 
@@ -183,6 +184,6 @@ def plot_multiple_runs(federated, loaded_scores):
 
 
 # example usage
-ss = State(federated=False, neuromorphic=False, method='backprop')
-fp, xcore, idx = run_multiple(ss)
-plot_multiple_runs(ss.federated, xcore)
+# ss = State(federated=False, neuromorphic=False, method='backprop')
+# fp, xcore, idx = run_multiple(ss)
+# plot_multiple_runs(ss.federated, xcore)

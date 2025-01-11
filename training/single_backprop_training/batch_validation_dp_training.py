@@ -16,6 +16,11 @@ def batch_validation_training_single_dp(trainable: Trainable, batches_dataset: B
         run_epoch_training_validation_dp(trainable, batches_dataset, training_scores, epoch)
         trainable.scheduler.step()
 
+    # I assume that the model trained to the last epoch is the best
+    # to not waste time on other considerations as overfitting
+    if trainable.state.save_model:
+        torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
+
     return training_scores.get_records()
 
 
@@ -119,8 +124,8 @@ def run_epoch_training_validation_dp(trainable: Trainable, batches_dataset: Batc
     training_scores.record_epoch_dp(train_loss, train_acc, val_loss, val_acc, privacy_spent)
 
     # Save the model_type if validation accuracy improves
-    if training_scores.is_best_accuracy() and trainable.state.save_model:
-        torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
+    # if training_scores.is_best_accuracy() and trainable.state.save_model:
+    #     torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
 
     # Print epoch statistics

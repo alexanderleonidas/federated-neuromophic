@@ -4,7 +4,6 @@ from tqdm import tqdm
 from training.single_backprop_training.batch_validation_training import update_progress_bar
 from utils.globals import device, MAX_EPOCHS, VERBOSE
 
-
 def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=None):
     """
     Run a single epoch of training using feedback alignment.

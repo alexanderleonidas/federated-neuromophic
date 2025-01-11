@@ -39,13 +39,15 @@ def run_single_model(state=None):
     return final_metrics, trainer.training_scores
 
 # SINGLE - BACKPROP w DIFFERENTIAL PRIVACY
+
+## we always save the model
 def run_normal_single_dp():
-    state = State(federated=False, neuromorphic=False, method='backprop-dp')
+    state = State(federated=False, neuromorphic=False, method='backprop-dp', save_model=True)
     return run_single_model(state)
 
 # SINGLE - by method
 def run_neuromorphic_single(method):
-    state = State(federated=False, neuromorphic=True, method=method)
+    state = State(federated=False, neuromorphic=True, method=method, save_model=True)
     return run_single_model(state)
 
 # SINGLE - PERTURBATION BASED
