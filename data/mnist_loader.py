@@ -1,8 +1,11 @@
+import numpy as np
+import torch.utils.data
 from torchvision import datasets, transforms
-
+from torch.utils.data import Subset, ConcatDataset, DataLoader
 from data.dataset_loader import Dataset, BatchDataset, FederatedDataset, DifferentialPrivacyDataset
 from utils.globals import IMAGE_RESIZE, I_HAVE_DOWNLOADED_MNIST, BATCH_SIZE, VALIDATION_SPLIT, \
     PATH_TO_DATA, NUM_CLIENTS
+import random
 
 
 def get_augmentation_transform(img_size=IMAGE_RESIZE):
@@ -29,9 +32,27 @@ def get_transform(img_size=IMAGE_RESIZE):
 def extract_mnist(transform):
     print(PATH_TO_DATA)
     # Download and load the training and test datasets
-    train_dataset = datasets.MNIST(root=PATH_TO_DATA, train=True, download=True, transform=transform)
-    test_dataset = datasets.MNIST(root=PATH_TO_DATA, train=False, download=True, transform=transform)
+    train_dataset = datasets.MNIST(root=PATH_TO_DATA, train=True, download=False, transform=transform)
+    test_dataset = datasets.MNIST(root=PATH_TO_DATA, train=False, download=False, transform=transform)
     return Dataset(train_dataset, test_dataset)
+
+def extract_mnist_attack(transform):
+    print("Loading from:", PATH_TO_DATA)
+
+    # 1. Load train + test
+    train_dataset_all = datasets.MNIST(root=PATH_TO_DATA, train=True, download=False, transform=transform)
+    test_dataset_all = datasets.MNIST(root=PATH_TO_DATA, train=False, download=False, transform=transform)
+    full_dataset = torch.utils.data.ConcatDataset([train_dataset_all, test_dataset_all])
+    # full_dataset = DataLoader(full_dataset)
+    train_len = int(len(full_dataset)/2)
+    # test_len = int(len(test_dataset_all)/2)
+
+    shadow_data, target_data = torch.utils.data.random_split(full_dataset, [train_len, train_len])
+
+    train_shadow, test_shadow = torch.utils.data.random_split(shadow_data, [int(train_len/2), int(train_len/2)])
+    train_target, test_target = torch.utils.data.random_split(target_data, [int(train_len/2), int(train_len/2)])
+
+    return Dataset(train_target, test_target), Dataset(train_shadow, test_shadow)
 
 
 def load_mnist_batches(validation_split=VALIDATION_SPLIT, shuffle_dataset=True, transform=get_transform(), batch_size=BATCH_SIZE):
@@ -50,5 +71,53 @@ def load_mnist_clients(num_clients=NUM_CLIENTS, shuffle_dataset=True, transform=
     dataset = extract_mnist(transform)
     clients = FederatedDataset(dataset, num_clients, validation_split, batch_size, shuffle_dataset)
     return clients
+
+
+def load_mnist_batches_attack(
+        validation_split=VALIDATION_SPLIT,
+        shuffle_dataset=True,
+        transform=get_transform(),
+        batch_size=BATCH_SIZE
+):
+    """
+    Loads the *entire* MNIST dataset using extract_mnist(transform).
+    Then splits it by half into:
+      1) DShadow  (first half of the data)
+      2) DTarget  (second half)
+
+    Afterwards, we create:
+      - batches_shadow = BatchDataset(DShadow, validation_split, ...)
+      - batches_target = BatchDataset(DTarget, validation_split, ...)
+
+    Inside each BatchDataset, 'validation_split' remains unaffected
+    (it will do its own internal split the same way it always did).
+
+    This aligns with:
+      "For each dataset, we first split it by half into DShadow and DTarget.
+       Following the attack strategy, we split DShadow by half into
+       DTrain_Shadow and DOut_Shadow, etc.
+       DTarget is also split in half => DTrain, DNonMem."
+    """
+
+    # 1) Load the complete MNIST dataset (train + test combined, or however extract_mnist is defined)
+    dataset_target, dataset_shadow = extract_mnist_attack(transform)
+
+    batches_shadow = BatchDataset(
+        dataset_shadow,
+        validation_split,
+        batch_size,
+        shuffle_dataset
+    )
+    batches_target = BatchDataset(
+        dataset_target,
+        validation_split,
+        batch_size,
+        shuffle_dataset
+    )
+    print(batches_target.train_loader.dataset)
+
+    # 6) Return the two batch datasets
+    return batches_target, batches_shadow
+
 
 

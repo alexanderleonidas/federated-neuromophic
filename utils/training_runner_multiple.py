@@ -5,16 +5,16 @@ from utils.training_runner import *
 from utils.plotting import plot_clients_learning_curves_multiple_runs, plot_runs_mean_with_std
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-NUM_RUNS = 3      # The total num of runs : (NUM_RUNS - 1) *actually in practice
+NUM_RUNS = 2      # The total num of runs : (NUM_RUNS - 1) *actually in practice
 # the total runs that you want to run
 # if the file has already existing runs, then the start will be from the last iteration,
 # until NUM_RUNS is reached
 # it can also be -1 to load all existing and count that as the total
 
 MAX_RUNS_FED = 50           # mostly to stick to file naming being the same
-MAX_RUNS_SINGLE = 100
+MAX_RUNS_SINGLE = 50
 
-results_path = './results'  # results directory
+results_path = './old_results'  # results directory
 
 extra_suffix = ''                  # if you have extra parameters you want to test for the same combination
 # extra_suffix = '_3c10e3r'        # example for 3 clients 10 epochs 3 rounds
@@ -117,6 +117,7 @@ def run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_i
 
     for i in range(first_iteration, iterations):
         print(f'Starting iteration {i}')
+
         if state.federated:
             final_metrics, training_scores = run_federated_model(state)
         else:
@@ -181,7 +182,6 @@ def plot_multiple_runs(federated, loaded_scores):
         plot_clients_learning_curves_multiple_runs(loaded_scores)
     else:
         plot_runs_mean_with_std([sc['training_scores'] for _, sc in loaded_scores.items()], 'Accuracy')
-
 
 # example usage
 # ss = State(federated=False, neuromorphic=False, method='backprop')

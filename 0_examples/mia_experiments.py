@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, cla
 
 from data.mnist_loader import load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
-from evaluation.mia import membership_inference_attack
+from evaluation.old_mia.mia import membership_inference_attack
 from models.federated_trainable import FederatedTrainable
 from training.federated_model_trainer import FederatedTrainer
 from utils.state import State
@@ -32,7 +32,7 @@ trainer.train_model()
 test_metrics = evaluate_outputs(trainer.global_model, batches_dataset.test_loader)
 final_metrics = test_metrics.get_results()
 
-# run MIA
+# run mia
 mia_labels, mia_preds = membership_inference_attack(trainable, batches_dataset)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -141,7 +141,7 @@ def node_pb_learning(trainable, noisy_trainable, data_loader, data_indices, epoc
         noisy_loss = noisy_trainable.criterion(outputs, labels)
 
         # Node perturbation weight update
-        trainable = estimate_gradients_np(trainable, intermediates, perturbations)
+        trainable = estimate_gradients_np(trainable, perturbations, intermediates, noisy_loss - clean_loss, p_std)
 
         trainable.optimizer.step()
 
@@ -186,7 +186,7 @@ def perturbation_based_learning(trainable, data_loader, data_indices, epoch_idx=
 
         # Estimate gradients
         loss_diff = loss_p - loss_n
-        trainable = estimate_gradients(trainable, perturbations, loss_diff)
+        trainable = estimate_gradients(trainable, perturbations, loss_diff, p_std)
 
         # Clip gradients and perform optimization step
         torch.nn.utils.clip_grad_norm_(trainable.model.parameters(), max_norm=2.0)

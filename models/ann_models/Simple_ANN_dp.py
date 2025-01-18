@@ -4,9 +4,9 @@ import torch.nn.functional as F
 from utils.globals import IMAGE_RESIZE, NUM_CLASSES
 
 
-class SimpleANN(nn.Module):
+class DPSimpleANN(nn.Module):
     def __init__(self, img_size=IMAGE_RESIZE):  # Default image size is (28, 28)
-        super(SimpleANN, self).__init__()
+        super(DPSimpleANN, self).__init__()
         input_size = img_size[0] * img_size[1]  # Flatten the image size
         self.h1 = 1024
         self.h2 = 256
@@ -15,6 +15,7 @@ class SimpleANN(nn.Module):
         self.fc2 = nn.Linear(self.h1, self.h2)              # Second hidden layer
         self.fc3 = nn.Linear(self.h2, NUM_CLASSES)          # Output layer (10 classes)
 
+        # self.dropout = nn.Dropout(p=0.05)
 
         self.__weights_init__()
 
@@ -30,7 +31,8 @@ class SimpleANN(nn.Module):
 
     def forward(self, x):
         x = x.view(x.size(0), -1)  # Flatten the input
-        x = F.relu(self.fc1(x))    # Activation for first hidden layer      # Apply dropout
+        x = F.relu(self.fc1(x))    # Activation for first hidden layer
+        # x = self.dropout(x)        # Apply dropout
         x = F.relu(self.fc2(x))    # Activation for second hidden layer
         x = self.fc3(x)            # Output layer (outputs)
         return x

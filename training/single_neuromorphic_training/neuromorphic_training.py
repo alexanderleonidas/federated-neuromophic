@@ -4,7 +4,8 @@ from matplotlib import pyplot as plt
 
 from training.single_backprop_training.batch_validation_training import run_one_epoch
 from training.single_neuromorphic_training.feedback_alignment import feedback_alignment_learning
-from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning2
+from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning2, \
+    perturbation_based_learning, node_pb_learning
 from training.watchers.training_watcher import TrainingWatcher
 from utils.globals import pb, get_model_path, VERBOSE, fa, MAX_EPOCHS
 

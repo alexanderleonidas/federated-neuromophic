@@ -4,6 +4,7 @@ from opacus.privacy_engine import PrivacyEngine
 
 from data.dataset_loader import DifferentialPrivacyDataset
 from models.ann_models.Simple_ANN_FA_model import DFAModel
+from models.ann_models.Simple_ANN_dp import DPSimpleANN
 from models.ann_models.Simple_ANN_model import SimpleANN
 from models.cnn_models.simple_CNN_FA_model import FeedbackAlignmentCNN
 from models.cnn_models.simple_CNN_dp import DPSuitableCNN
@@ -124,7 +125,8 @@ class Trainable:
             raise Exception('Non valid method, unable to load model_type')
 
     def __load_simple_ann_dp_model__(self, img_size=IMAGE_RESIZE):
-        raise Exception('Not Implemented yet')
+        self.model = DPSimpleANN(img_size).to(device)
+        self.criterion, self.optimizer, self.scheduler = get_standard_training_parameters(self.model)
 
     def load_federated_ann__(self, state):
         if state.fed_type == 'entire':
