@@ -6,7 +6,9 @@ from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
 from data.mnist_loader import load_mnist_batches
+from models.federated_trainable import FederatedTrainable
 from models.single_trainable import Trainable
+from training.federated_model_trainer import FederatedTrainer
 from training.single_model_trainer import Trainer
 from utils.globals import BATCH_SIZE, device, MIA_EPOCHS
 
@@ -137,7 +139,7 @@ def train_target_model(state):
     # 7) Return membership inference data + the trained model
     return attack_x, attack_y, trainable.model
 
-def train_target_model(batches_target, state):
+def train_target_model(batches_target, state, batches_target_non_federated = None):
     """
     Trains a model using the given 'state' configuration,
     then collects probabilities on:
@@ -148,16 +150,23 @@ def train_target_model(batches_target, state):
        attack_x: (N_in + N_out, num_classes) array of softmax probabilities
        attack_y: (N_in + N_out,) array of 0/1 membership labels
        trained_model: the final trained model (trainable.model)"""
+    if state.federated == True:
 
-    # 2) Create a Trainable object and set up DP if needed
-    trainable = Trainable(state=state)
-    if state.method == 'backprop-dp':
-        trainable.support_dp_engine(batches_target)
+        trainable = FederatedTrainable(state=state, dataset=batches_target)
+        trainer = FederatedTrainer(trainable=trainable, dataset=batches_target, state=state)
 
-    # 3) Set up the trainer and actually train the model
-    trainer = Trainer(trainable=trainable, dataset=batches_target, state=state)
-    trainer.train_model()  # after this, trainable.model should be your trained model
+        trainer.train_model()
+    else:
+        trainable = Trainable(state=state)
+        if state.method == 'backprop-dp':
+            trainable.support_dp_engine(batches_target)
 
+        # 3) Set up the trainer and actually train the model
+        trainer = Trainer(trainable=trainable, dataset=batches_target, state=state)
+        trainer.train_model()  # after this, trainable.model should be your trained model
+
+    if state.federated == True:
+        batches_target = batches_target_non_federated
     # 4) Extract the raw train/test data from the dataset
     #    This depends on how your `batches_dataset` is structured.
     #    For example, PyTorch MNIST dataset has `data` and `targets` attributes.
@@ -197,19 +206,6 @@ def train_target_model(batches_target, state):
 
 
 
-    # # If you're using the standard MNIST dataset, you'll have something like:
-    # #   train_dataset.data  -> shape (N, 28, 28)
-    # #   train_dataset.targets -> shape (N,)
-    # # Convert them to numpy arrays (and flatten if needed):
-    # train_x = train_dataset.numpy()  # (N, 28, 28)
-    # train_y = train_dataset.numpy()  # (N,)
-    # # Flatten from (N,28,28) to (N,784), if your model expects that:
-    # train_x = train_x.reshape(len(train_x), -1)
-    #
-    # test_x = test_dataset.numpy()   # (M, 28, 28)
-    # test_y = test_dataset.numpy() # (M,)
-    # test_x = test_x.reshape(len(test_x), -1)
-
     # 5) Define a helper to get softmax probabilities from the trained model
     def get_probs(X):
         """
@@ -222,11 +218,11 @@ def train_target_model(batches_target, state):
             shuffle=False
         )
         all_probs = []
-        trainable.model.eval()  # ensure eval mode
+        trainer.global_model.eval()  # ensure eval mode
         with torch.no_grad():
             for (batch_x,) in loader:
                 batch_x = batch_x.to(device)
-                logits  = trainable.model(batch_x)     # shape (batch_size, num_classes)
+                logits  = trainer.global_model(batch_x)     # shape (batch_size, num_classes)
                 probs   = F.softmax(logits, dim=1)     # softmax to get probabilities
                 all_probs.append(probs.cpu().numpy())
 
@@ -248,7 +244,7 @@ def train_target_model(batches_target, state):
     attack_y = attack_y.astype('int32')
 
     # 7) Return membership inference data + the trained model
-    return attack_x, attack_y, trainable.model
+    return attack_x, attack_y, trainer.global_model
 
 
 # deeplearning.py

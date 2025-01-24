@@ -44,7 +44,7 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
             outputs = trainable.model(images)
             loss = trainable.criterion(outputs, labels)
 
-            a1, a2 = trainable.model.feedback_alignment_backward(loss)
+            a1, a2 = trainable.model.feedback_alignment_backward(labels)
             angle1.append(a1)
             angle2.append(a2)
 

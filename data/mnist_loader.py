@@ -47,10 +47,14 @@ def extract_mnist_attack(transform):
     train_len = int(len(full_dataset)/2)
     # test_len = int(len(test_dataset_all)/2)
 
-    shadow_data, target_data = torch.utils.data.random_split(full_dataset, [train_len, train_len])
+    generator1 = torch.Generator().manual_seed(42)
+    generator2 = torch.Generator().manual_seed(42)
+    generator3 = torch.Generator().manual_seed(42)
 
-    train_shadow, test_shadow = torch.utils.data.random_split(shadow_data, [int(train_len/2), int(train_len/2)])
-    train_target, test_target = torch.utils.data.random_split(target_data, [int(train_len/2), int(train_len/2)])
+    shadow_data, target_data = torch.utils.data.random_split(full_dataset, [train_len, train_len], generator=generator1)
+
+    train_shadow, test_shadow = torch.utils.data.random_split(shadow_data, [int(train_len/2), int(train_len/2)], generator=generator2)
+    train_target, test_target = torch.utils.data.random_split(target_data, [int(train_len/2), int(train_len/2)], generator=generator3)
 
     return Dataset(train_target, test_target), Dataset(train_shadow, test_shadow)
 
@@ -114,10 +118,56 @@ def load_mnist_batches_attack(
         batch_size,
         shuffle_dataset
     )
-    print(batches_target.train_loader.dataset)
 
     # 6) Return the two batch datasets
     return batches_target, batches_shadow
 
+def load_mnist_clients_batches_attack(
+        num_clients=NUM_CLIENTS,
+        shuffle_dataset=True,
+        transform=get_transform(),
+        validation_split=VALIDATION_SPLIT,
+        batch_size=BATCH_SIZE
+):
+    """
+    Loads the *entire* MNIST dataset using extract_mnist(transform).
+    Then splits it by half into:
+      1) DShadow  (first half of the data)
+      2) DTarget  (second half)
+
+    Afterwards, we create:
+      - batches_shadow = BatchDataset(DShadow, validation_split, ...)
+      - batches_target = BatchDataset(DTarget, validation_split, ...)
+
+    Inside each BatchDataset, 'validation_split' remains unaffected
+    (it will do its own internal split the same way it always did).
+
+    This aligns with:
+      "For each dataset, we first split it by half into DShadow and DTarget.
+       Following the attack strategy, we split DShadow by half into
+       DTrain_Shadow and DOut_Shadow, etc.
+       DTarget is also split in half => DTrain, DNonMem."
+    """
+
+    # 1) Load the complete MNIST dataset (train + test combined, or however extract_mnist is defined)
+    dataset_target, dataset_shadow = extract_mnist_attack(transform)
+
+    batches_shadow = BatchDataset(
+        dataset_shadow,
+        validation_split,
+        batch_size,
+        shuffle_dataset
+    )
+
+    batches_target = FederatedDataset(
+        dataset_target,
+        num_clients,
+        validation_split,
+        batch_size,
+        shuffle_dataset
+    )
+
+    # 6) Return the two batch datasets
+    return batches_target, batches_shadow
 
 

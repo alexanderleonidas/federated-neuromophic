@@ -5,7 +5,7 @@ from utils.training_runner import *
 from utils.plotting import plot_clients_learning_curves_multiple_runs, plot_runs_mean_with_std
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-NUM_RUNS = 2      # The total num of runs : (NUM_RUNS - 1) *actually in practice
+NUM_RUNS = 11     # The total num of runs : (NUM_RUNS - 1) *actually in practice
 # the total runs that you want to run
 # if the file has already existing runs, then the start will be from the last iteration,
 # until NUM_RUNS is reached
@@ -14,7 +14,7 @@ NUM_RUNS = 2      # The total num of runs : (NUM_RUNS - 1) *actually in practice
 MAX_RUNS_FED = 50           # mostly to stick to file naming being the same
 MAX_RUNS_SINGLE = 50
 
-results_path = './old_results'  # results directory
+results_path = './results'  # results directory
 
 extra_suffix = ''                  # if you have extra parameters you want to test for the same combination
 # extra_suffix = '_3c10e3r'        # example for 3 clients 10 epochs 3 rounds
@@ -31,7 +31,7 @@ OVERWRITE_EXISTING = False         # if you want to override what you have saved
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def get_file_path_by_state(state: State):
+def get_file_path_by_state(state: State, mia=False):
     if state.federated:
         fs = 'federated'
         nr = MAX_RUNS_FED
@@ -43,7 +43,8 @@ def get_file_path_by_state(state: State):
     if state.method == fa: method = 'fa'
     elif state.method == pb: method = 'pb'
 
-    return f'{results_path}/training_scores_{fs}_{method}_{nr}runs{extra_suffix}.json'
+    mia_str = '_MIA' if mia else ''
+    return f'{results_path}/training_scores_{fs}_{method}_{nr}runs{mia_str}{extra_suffix}.json'
 
 def load_json_data(file_path):
     # Function to load JSON
@@ -58,10 +59,10 @@ def load_json_data(file_path):
             print(f"Error decoding JSON from {file_path}. Returning an empty list.")
             return []
 
-def load_recorded_scores(state):
+def load_recorded_scores(state, mia=False):
     if not os.path.exists(results_path): os.makedirs(results_path)
 
-    file_path = get_file_path_by_state(state)
+    file_path = get_file_path_by_state(state, mia=mia)
 
     print(f'Loading scores from {file_path}')
 
@@ -148,6 +149,57 @@ def run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_i
             json.dump(data, f, indent=4)
             f.truncate()
 
+def run_and_save_multiple_iterations_MIA(training_scores_file, loaded_scores, last_iteration, state, extract_results):
+    all_final_metrics = []
+
+    if NUM_RUNS <= 0:
+        iterations = len(loaded_scores)
+    else:
+        iterations = NUM_RUNS
+
+    if OVERWRITE_EXISTING:
+        print(f'You are going to override all existing results in file {training_scores_file}')
+        print(f'ARE YOU SURE? Yes will start from 0, No will exit the program')
+        str_in = input('[Y/N]')
+        if str_in.replace(' ', '').lower() == 'y':
+            first_iteration = 0
+        else:
+            exit(0)
+    else:
+        first_iteration = last_iteration + 1
+        if first_iteration > iterations:
+            first_iteration = iterations
+
+    print(f'On run from iteration {first_iteration}, up to {iterations}')
+
+    for i in range(first_iteration, iterations):
+        print(f'Starting iteration {i}')
+
+        final_metrics = runMIA(state)
+        del final_metrics['confusion_matrix']
+        all_final_metrics.append(final_metrics)
+
+        # Prepare the client_runs with iteration count
+        scores = {
+            'final_metrics': final_metrics
+        }
+
+        iteration_key = str(i)
+        print(f'Saving in Results: Run Number {i}/{iterations} >>')
+
+        # Update final_metrics.json
+        with open(training_scores_file, 'r+') as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = {}
+
+            data[iteration_key] = scores
+
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
+
 def get_single_model_running_fn(state):
     if state.neuromorphic:
         if state.method == pb: return run_neuromorphic_pb_single
@@ -171,6 +223,15 @@ def run_multiple_single_model(state):
     extract_results = lambda x: x
 
     run_and_save_multiple_iterations(training_scores_file, loaded_scores, last_iteration, state, extract_results)
+
+    return training_scores_file, loaded_scores, last_iteration
+
+def run_multiple_MIA(state):
+    assert state.federated
+    training_scores_file, loaded_scores, last_iteration = load_recorded_scores(state, mia=True)
+    extract_results = lambda x: x
+
+    run_and_save_multiple_iterations_MIA(training_scores_file, loaded_scores, last_iteration, state, extract_results)
 
     return training_scores_file, loaded_scores, last_iteration
 

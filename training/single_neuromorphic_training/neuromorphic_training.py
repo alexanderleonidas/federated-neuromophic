@@ -4,23 +4,22 @@ from matplotlib import pyplot as plt
 
 from training.single_backprop_training.batch_validation_training import run_one_epoch
 from training.single_neuromorphic_training.feedback_alignment import feedback_alignment_learning
-from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning2, \
-    perturbation_based_learning, node_pb_learning
+from training.single_neuromorphic_training.perturbation_based import perturbation_based_learning
 from training.watchers.training_watcher import TrainingWatcher
 from utils.globals import pb, get_model_path, VERBOSE, fa, MAX_EPOCHS
 
 
 def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
     """
-    Train the model_type using either perturbation-based learning (PBL) or feedback alignment (FA).
+    Train the model_type using either perturbation-based learning (PBL) or b alignment (FA).
 
     Args:
         trainable: A class or object containing the model_type, optimizer, and criterion.
         batches_dataset: Dataset object with training and validation loaders and indices.
-        method: Method to use ('pb' for perturbation-based, 'fa' for feedback alignment).
+        method: Method to use ('pb' for perturbation-based, 'fa' for b alignment).
         num_epochs: Number of epochs to train.
         p_std: Perturbation magnitude for PBL.
-        rfm: Random matrices for feedback alignment, if FA is used.
+        rfm: Random matrices for b alignment, if FA is used.
 
     Returns:
         TrainingWatcher: Object containing training and validation losses and accuracies.
@@ -51,8 +50,8 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
 
         training_watcher.record_epoch(train_loss, train_acc, val_loss, val_acc)
 
-        # if training_watcher.is_best_accuracy() and trainable.state.save_model:
-        #     torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
+        if training_watcher.is_best_accuracy() and trainable.state.save_model:
+            torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
 
         # Print epoch statistics
         if VERBOSE:
@@ -60,20 +59,15 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
             print(f'Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}% | '
                   f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%\n')
 
-    # I assume that the model trained to the last epoch is the best
-    # This is to not waste time on other considerations as overfitting
-    if trainable.state.save_model:
-        torch.save(trainable.model.state_dict(), get_model_path(trainable.state))
-
     if method == fa:
         x = np.arange(1, MAX_EPOCHS+1)
-        plt.plot(x, a1, color='blue', label='FC1')
-        plt.plot(x, a2, color='green', label='FC2')
+        plt.plot(x, a1, color='blue', label='FM 1')
+        plt.plot(x, a2, color='green', label='FM 2')
         plt.xlabel('Epochs')
-        plt.ylabel('Alignment')
-        plt.title('Feedback Alignment Similarity Angles')
+        plt.ylabel('Angles')
+        plt.title('Feedback Matrices Similarity Angles')
         plt.legend()
-        plt.ylim([-1,1])
+        plt.ylim([0, 90])
         plt.xlim([1, MAX_EPOCHS])
         plt.show()
 

@@ -11,12 +11,19 @@ import sys
 import numpy as np
 import torch
 
-from sklearn.metrics import roc_auc_score
-
+from sklearn.metrics import (
+    roc_auc_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    classification_report
+)
 # We assume you've replaced your Theano/Lasagne "deeplearning.py" with a PyTorch version
 # that defines `train_target_model(dataset, epochs, batch_size, learning_rate, n_hidden, model, l2_ratio)`.
 import evaluation.mia.deeplearning as dl
-from utils.globals import dp, MIA_EPOCHS, bp
+from evaluation.metrics import Metrics
+from utils.globals import dp, MIA_EPOCHS, bp, device
 
 # We assume you've replaced your Theano/Lasagne "classifier.py" with a PyTorch version
 # that defines `train_model(dataset, epochs, batch_size, learning_rate, n_hidden, model, l2_ratio, ...)`.
@@ -25,7 +32,7 @@ import evaluation.mia.classifier as classifier
 # We assume you have a function `load_mnist_batches()` returning a DataLoader-based object:
 #    batches_dataset.train_loader
 #    batches_dataset.test_loader
-from data.mnist_loader import load_mnist_batches_attack
+from data.mnist_loader import load_mnist_batches_attack, load_mnist_clients_batches_attack
 from utils.state import State
 
 ###############################################################################
@@ -69,11 +76,11 @@ def trainAttackModel(X_train, y_train, X_test, y_test):
     print("Training the Attack Model (softmax) on membership data...")
     trained_model = classifier.train_model(
         dataset=dataset,
-        epochs=100,  # or tweak as needed
+        epochs=MIA_EPOCHS,  # or tweak as needed
         batch_size=10,
         learning_rate=0.05,
         n_hidden=64,  # not really used in 'softmax' model but required param
-        l2_ratio=1e-5,
+        l2_ratio=1e-6,
         model='softmax'
     )
 
@@ -85,9 +92,16 @@ def trainAttackModel(X_train, y_train, X_test, y_test):
 ###############################################################################
 def main_mia_flow(
     num_epoch=MIA_EPOCHS,
+    state = State(federated=False, neuromorphic=False, method=bp,  save_model=True),
     top_x=3
 ):
-    batches_target, batches_shadow = load_mnist_batches_attack()
+    batches_target_non_federated = None
+    if state.federated == True:
+        batches_target, batches_shadow = load_mnist_clients_batches_attack()
+        batches_target_non_federated, _ = load_mnist_batches_attack()
+    else:
+        batches_target, batches_shadow = load_mnist_batches_attack()
+
 
     # Extract shadow dataset components
     shadow_train_loader = batches_shadow.train_loader
@@ -134,17 +148,17 @@ def main_mia_flow(
 
     attack_x_target, attack_y_target, target_model = dl.train_target_model(
         batches_target,
-        state=State(federated=False, neuromorphic=False, method=bp,  save_model=True)
+        state=state,
+        batches_target_non_federated=batches_target_non_federated
     )
 
     if top_x > 0:
         attack_x_shadow = clipDataTopX(attack_x_shadow, top=top_x)
         attack_x_target = clipDataTopX(attack_x_target, top=top_x)
 
-    print(attack_x_target)
-    print(attack_y_target)
-    print(attack_x_shadow)
-    print(attack_y_shadow)
+    attack_y_target_old = attack_y_target
+    attack_y_target = np.eye(2, dtype=np.float32)[attack_y_target]
+    attack_y_shadow = np.eye(2, dtype=np.float32)[attack_y_shadow]
 
     attack_model = trainAttackModel(
         X_train=attack_x_shadow,
@@ -153,10 +167,38 @@ def main_mia_flow(
         y_test=attack_y_target
     )
 
-    if attack_x_target.shape[1] == 1:
-        pred_scores = attack_x_target.ravel()
-    else:
-        pred_scores = np.sum(attack_x_target, axis=1)
+    attack_model.eval()
+    with torch.no_grad():
+        # Convert your attack_x_target to a torch Tensor if it's not already
+        x_tensors = torch.tensor(attack_x_target, dtype=torch.float).to(device)
+        logits = attack_model(x_tensors)  # shape (N, 2)
+        probs = torch.softmax(logits, dim=1)[:, 1]  # probability of membership
+        pred_scores = probs.cpu().numpy()
 
-    auc_val = roc_auc_score(attack_y_target, pred_scores)
+
+    auc_val = roc_auc_score(attack_y_target_old, pred_scores)
     print(f"\nFinal MIA Attack AUC on Target Data: {auc_val:.4f}")
+
+    pred_labels = (pred_scores >= 0.5).astype(int)
+
+    # Compute common metrics
+    total = len(attack_y_target_old)
+    correct = int(np.sum(pred_labels == attack_y_target_old))
+    precision_val = precision_score(attack_y_target_old, pred_labels, zero_division=0)
+    recall_val = recall_score(attack_y_target_old, pred_labels, zero_division=0)
+    f1_val = f1_score(attack_y_target_old, pred_labels, zero_division=0)
+    conf_mat = confusion_matrix(attack_y_target_old, pred_labels)
+    class_wise = classification_report(attack_y_target_old, pred_labels, output_dict=True)
+
+    # Return dictionary of metrics
+    return {
+        'total': total,
+        'correct': correct,
+        'precision': precision_val,
+        'recall': recall_val,
+        'f1_score': f1_val,
+        'class_wise_metrics': class_wise,
+        'confusion_matrix': conf_mat,
+        'roc_auc': auc_val
+    }
+

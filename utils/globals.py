@@ -30,14 +30,14 @@ def load_device():
 
 def get_standard_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=1e-3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
     return criterion, optimizer, scheduler
 
 def get_fa_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=1e-3)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(MAX_EPOCHS * NUM_ROUNDS * 0.6), gamma=0.75)
     return criterion, optimizer, scheduler
 
 def get_pb_training_parameters(model):
@@ -88,11 +88,11 @@ PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
 PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 10
+MAX_EPOCHS = 50
 MIA_EPOCHS = 20
 NUM_CLASSES = 10
-BATCH_SIZE = 64
-VALIDATION_SPLIT = 0.30
+BATCH_SIZE = 128
+VALIDATION_SPLIT = 0.1
 
 # IMAGES
 IMAGE_RESIZE = (28, 28)     # smaller means faster but harder to interpret completely
@@ -106,12 +106,12 @@ dp = 'backprop-dp'
 
 # FEDERATED PARAMETERS
 NUM_CLIENTS = 3
-NUM_ROUNDS = 5
+NUM_ROUNDS = 13
 DISJOINT_RATIO = 0
 
 # DIFFERENTIAL PRIVACY PARAMETERS
 NOISE_MULTIPLIER = 1e-4
 MAX_GRAD_NORM = 1.0
-TARGET_EPSILON = 10
+TARGET_EPSILON = 0.1
 TARGET_DELTA = 2e-5  # Typically set to 1 / (number of training samples)
 

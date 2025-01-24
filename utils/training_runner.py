@@ -1,5 +1,6 @@
 from data.mnist_loader import load_mnist_batches, load_mnist_clients
 from evaluation.evaluation import evaluate_outputs
+from evaluation.mia.mlLeaks import main_mia_flow
 from models.federated_trainable import FederatedTrainable
 from models.single_trainable import Trainable
 from training.federated_model_trainer import FederatedTrainer
@@ -7,9 +8,21 @@ from training.single_model_trainer import Trainer
 from utils.globals import pb, fa, NUM_CLIENTS, VERBOSE
 from utils.plotting import plot_learning_curve, plot_server_round_scores, plot_clients_learning_curves
 from utils.state import State
-
+import argparse
 
 # SINGLE MODEL - BACKPROP BY DEFAULT
+
+def runMIA(state):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--topX', type=int, default=3, help='Number of top probabilities to keep')
+    opt = parser.parse_args()
+
+    final_metrics = main_mia_flow(
+        top_x=opt.topX,
+        state = state
+    )
+    return final_metrics
+
 def run_single_model(state=None):
     if state is None:  state = State()
     else:
@@ -71,7 +84,7 @@ def run_federated_model(state):
 
     clients_dataset = load_mnist_clients(NUM_CLIENTS)
 
-    trainable = FederatedTrainable(state=state)
+    trainable = FederatedTrainable(state=state, dataset=clients_dataset)
     trainer = FederatedTrainer(trainable=trainable, dataset=clients_dataset, state=state)
 
     trainer.train_model()

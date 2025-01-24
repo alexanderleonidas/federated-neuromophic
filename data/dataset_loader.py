@@ -113,8 +113,19 @@ class FederatedDataset(Dataset):
         return [BatchDataset(cds, self.val_split_ratio, self.batch_size, shuffle) for cds in client_ds]
 
     def uniform_split_clients(self, dataset, num_clients, shuffle):
-        client_sets = random_split(self.training_set, [len(self.training_set) // num_clients] * num_clients)
+        dataset_length = len(self.training_set)
+        # Calculate base size for each client and the remainder
+        base_size = dataset_length // num_clients
+        remainder = dataset_length % num_clients
+
+        # Create splits, distributing the remainder across clients
+        split_sizes = [base_size + (1 if i < remainder else 0) for i in range(num_clients)]
+
+        # Use random_split to create datasets for each client
+        client_sets = random_split(self.training_set, split_sizes)
         client_ds = [Dataset(cs, dataset.testing_set) for cs in client_sets]
+
+        # Return batched datasets
         return [BatchDataset(cds, self.val_split_ratio, self.batch_size, shuffle) for cds in client_ds]
 
     def disjoint_class_split_clients(self, dataset, num_clients, shuffle):

@@ -107,7 +107,7 @@ class Trainable:
             if state.method == bp:
                 self.__load_simple_ann_model__()
             elif state.method == dp:
-                self.__load_simple_ann_dp_model__()
+                self.__load_simple_ann_model__()
             else:
                 raise ValueError(f'Unknown method {state.method} for non neuromorphic model settings, \n'
                                  f'available are: [\'backprop\', \'backprop-dp\']')

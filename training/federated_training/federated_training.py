@@ -10,14 +10,20 @@ def federated_training(trainable: FederatedTrainable, dataset:FederatedDataset, 
     clients = trainable.clients
     server = trainable.server
 
+    if trainable.state.method == 'backprop-dp':
+        for client_id, client in enumerate(clients):
+            client.local_model.support_dp_engine(dataset.client_loaders[client_id])
+
     federated_watcher = FederatedTrainingWatcher()
     server_trainer = server.global_trainable
+    #server_trainer.support_dp_engine(dataset)
     for round_num in range(NUM_ROUNDS):
         print(f'Global Training Starting Round {round_num+1}/{NUM_ROUNDS}')
 
         for client_id, client in enumerate(clients):
             client_dataset = dataset.client_loaders[client_id]
             client_trainer = Trainer(client.local_model, client_dataset, client.state)
+
             print(f'Local training on client {client_id+1}/{len(clients)}')
             client_scores = client_trainer.train_model()
             federated_watcher.record_client_round_training(round_num, client_id, client_scores)
