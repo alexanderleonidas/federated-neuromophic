@@ -11,6 +11,7 @@ VERBOSE = True
 
 
 def load_device():
+    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
         return torch.device('cuda')
 
@@ -36,7 +37,7 @@ def get_standard_training_parameters(model):
 
 def get_fa_training_parameters(model):
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(MAX_EPOCHS * NUM_ROUNDS * 0.6), gamma=0.75)
     return criterion, optimizer, scheduler
 
@@ -88,8 +89,8 @@ PATH_TO_MNIST = os.path.join(PATH_TO_DATA, 'MNIST')
 PATH_TO_N_MNIST = os.path.join(PATH_TO_DATA, 'NMNIST')
 
 # TRAINING PARAMETERS
-MAX_EPOCHS = 50
-MIA_EPOCHS = 20
+MAX_EPOCHS = 2
+MIA_EPOCHS = 50
 NUM_CLASSES = 10
 BATCH_SIZE = 128
 VALIDATION_SPLIT = 0.1
@@ -106,7 +107,7 @@ dp = 'backprop-dp'
 
 # FEDERATED PARAMETERS
 NUM_CLIENTS = 3
-NUM_ROUNDS = 13
+NUM_ROUNDS = 50
 DISJOINT_RATIO = 0
 
 # DIFFERENTIAL PRIVACY PARAMETERS

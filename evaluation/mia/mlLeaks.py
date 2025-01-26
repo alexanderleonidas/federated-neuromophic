@@ -78,7 +78,7 @@ def trainAttackModel(X_train, y_train, X_test, y_test):
         dataset=dataset,
         epochs=MIA_EPOCHS,  # or tweak as needed
         batch_size=10,
-        learning_rate=0.05,
+        learning_rate=0.01,
         n_hidden=64,  # not really used in 'softmax' model but required param
         l2_ratio=1e-6,
         model='softmax'
@@ -156,10 +156,6 @@ def main_mia_flow(
         attack_x_shadow = clipDataTopX(attack_x_shadow, top=top_x)
         attack_x_target = clipDataTopX(attack_x_target, top=top_x)
 
-    attack_y_target_old = attack_y_target
-    attack_y_target = np.eye(2, dtype=np.float32)[attack_y_target]
-    attack_y_shadow = np.eye(2, dtype=np.float32)[attack_y_shadow]
-
     attack_model = trainAttackModel(
         X_train=attack_x_shadow,
         y_train=attack_y_shadow,
@@ -176,19 +172,19 @@ def main_mia_flow(
         pred_scores = probs.cpu().numpy()
 
 
-    auc_val = roc_auc_score(attack_y_target_old, pred_scores)
+    auc_val = roc_auc_score(attack_y_target, pred_scores)
     print(f"\nFinal MIA Attack AUC on Target Data: {auc_val:.4f}")
 
     pred_labels = (pred_scores >= 0.5).astype(int)
 
     # Compute common metrics
-    total = len(attack_y_target_old)
-    correct = int(np.sum(pred_labels == attack_y_target_old))
-    precision_val = precision_score(attack_y_target_old, pred_labels, zero_division=0)
-    recall_val = recall_score(attack_y_target_old, pred_labels, zero_division=0)
-    f1_val = f1_score(attack_y_target_old, pred_labels, zero_division=0)
-    conf_mat = confusion_matrix(attack_y_target_old, pred_labels)
-    class_wise = classification_report(attack_y_target_old, pred_labels, output_dict=True)
+    total = len(attack_y_target)
+    correct = int(np.sum(pred_labels == attack_y_target))
+    precision_val = precision_score(attack_y_target, pred_labels, zero_division=0)
+    recall_val = recall_score(attack_y_target, pred_labels, zero_division=0)
+    f1_val = f1_score(attack_y_target, pred_labels, zero_division=0)
+    conf_mat = confusion_matrix(attack_y_target, pred_labels)
+    class_wise = classification_report(attack_y_target, pred_labels, output_dict=True)
 
     # Return dictionary of metrics
     return {

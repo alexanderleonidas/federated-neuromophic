@@ -1,4 +1,5 @@
 import torch
+from torch import linalg as LA
 from tqdm import tqdm
 
 from training.single_backprop_training.batch_validation_training import update_progress_bar
@@ -32,6 +33,8 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
     angle1 = []
     angle2 = []
 
+    grad_v = []
+
     with torch.set_grad_enabled(True):  # Ensure gradients are enabled for training
         for images, labels in progress_bar:
             images = images.to(device)
@@ -47,7 +50,12 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
             a1, a2 = trainable.model.feedback_alignment_backward(labels)
             angle1.append(a1)
             angle2.append(a2)
+            grads = [p.grad for p in trainable.model.parameters() if p.grad is not None]
+            grads = torch.cat([g.flatten() for g in grads])
+            v = LA.vector_norm(grads, ord=2)
+            grad_v.append(v.item())
 
+            torch.nn.utils.clip_grad_norm_(trainable.model.parameters(), max_norm=7)
             # Optimizer step
             trainable.optimizer.step()
 
@@ -59,4 +67,4 @@ def feedback_alignment_learning(trainable, data_loader, data_indices, epoch_idx=
     epoch_loss = running_loss / len(data_indices)
     epoch_acc = 100 * correct / total
 
-    return epoch_loss, epoch_acc, angle1, angle2
+    return epoch_loss, epoch_acc, angle1, angle2, grad_v

@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score
+
 from utils.globals import device
 
 sys.dont_write_bytecode = True
@@ -118,31 +119,6 @@ class SoftmaxModel(nn.Module):
         x = self.fc2(x)
         return x
 
-import torch
-import torch.nn.functional as F
-
-def manual_categorical_crossentropy_onehot(logits: torch.Tensor,
-                                           targets: torch.Tensor) -> torch.Tensor:
-    """
-    Manually compute mean categorical cross-entropy loss.
-
-    This version assumes 'targets' is integer class labels of shape (batch_size,).
-    We convert them to one-hot internally, then compute:
-        -sum( one_hot * log_softmax(...) ) / batch_size
-    """
-    # 1) Convert integer labels => one-hot (batch_size, num_classes)
-    num_classes = logits.size(1)
-    targets_onehot = F.one_hot(targets, num_classes=num_classes).float()  # (bs, num_classes)
-
-    # 2) Compute log-softmax => shape (batch_size, num_classes)
-    log_probs = F.log_softmax(logits, dim=1)  # (bs, num_classes)
-
-    # 3) Multiply by one-hot, sum over classes => shape (batch_size,)
-    ce_each = -(targets_onehot * log_probs).sum(dim=1)
-
-    # 4) Return average over batch
-    return ce_each.mean()
-
 
 ###############################################################################
 # 3) The main training function (similar structure to your train_model in Theano)
@@ -190,13 +166,11 @@ def train_model(dataset,
         print('Using a single layer softmax based model...')
         net = SoftmaxModel(n_in, n_out)
 
-    # Move model to GPU if available
     net.to(device)
 
     # Define loss and optimizer
     optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=l2_ratio)
-    criterion = nn.BCEWithLogitsLoss()
-    criterion2 = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss()
     # Training loop
     print('Training...')
     for epoch in range(epochs):
@@ -206,26 +180,22 @@ def train_model(dataset,
         for input_batch, target_batch in iterate_minibatches(train_x, train_y, batch_size, shuffle=True):
             # Convert to torch Tensors
             input_tensor = torch.tensor(input_batch, dtype=torch.float32).to(device)
-            if model == 'softmax':
-                target_tensor = torch.tensor(target_batch, dtype=torch.float32).to(device)
-            else:
-                target_tensor = torch.tensor(target_batch, dtype=torch.long).to(device)
+            target_tensor = torch.tensor(target_batch, dtype=torch.long).to(device)
 
             optimizer.zero_grad()
 
             # Forward
+            # categorical cross entropy loss
             logits = net(input_tensor)
 
-            if model == 'softmax':
-                loss =criterion(logits, target_tensor)
-            else:
-                loss = criterion2(logits, target_tensor)
+            loss = criterion(logits, target_tensor)
+
 
             # Backward
             loss.backward()
             optimizer.step()
 
-            total_loss += loss.item() / batch_size
+            total_loss += loss.item()
 
         # Print every 10 epochs (or as you like)
         if epoch % 2 == 0:
@@ -234,51 +204,21 @@ def train_model(dataset,
     # After training, evaluate on the test set (if available)
     net.eval()
 
-    if model == 'softmax':
+    if test_x is not None and len(test_x) > 0:
+        print('Testing...')
+        # Predict in batches
+        all_preds = []
+        for input_batch, _ in iterate_minibatches(test_x, test_y, batch_size, shuffle=False):
+            input_tensor = torch.tensor(input_batch, dtype=torch.float32).to(device)
+            with torch.no_grad():
+                logits = net(input_tensor)
+                preds  = torch.argmax(logits, dim=1).cpu().numpy()
+                all_preds.append(preds)
 
-        if test_x is not None and len(test_x) > 0:
-            print('Testing...')
+        pred_y = np.concatenate(all_preds)
+        print(f'Testing Accuracy: {accuracy_score(test_y, pred_y):.4f}')
 
-            # Convert one-hot test_y -> integer indices
-            # If test_y is shape (N, 2), np.argmax along axis=1 -> shape (N,)
-            test_y_int = np.argmax(test_y, axis=1)
-
-            # Predict in batches
-            all_preds = []
-            for input_batch, _ in iterate_minibatches(test_x, test_y, batch_size, shuffle=False):
-                input_tensor = torch.tensor(input_batch, dtype=torch.float32).to(device)
-
-                with torch.no_grad():
-                    logits = net(input_tensor)  # shape (batch_size, num_classes)
-                    preds = torch.argmax(logits, dim=1)  # shape (batch_size,)
-                    all_preds.append(preds.cpu().numpy())
-
-            # Concatenate batch predictions into one array
-            pred_y = np.concatenate(all_preds)  # shape (N,)
-
-            # Evaluate accuracy
-            acc = accuracy_score(test_y_int, pred_y)
-            print(f'Testing Accuracy: {acc:.4f}')
-
-            # More detailed classification metrics
-            print('More detailed results:')
-            print(classification_report(test_y_int, pred_y))
-    else:
-        if test_x is not None and len(test_x) > 0:
-            print('Testing...')
-            # Predict in batches
-            all_preds = []
-            for input_batch, _ in iterate_minibatches(test_x, test_y, batch_size, shuffle=False):
-                input_tensor = torch.tensor(input_batch, dtype=torch.float32).to(device)
-                with torch.no_grad():
-                    logits = net(input_tensor)
-                    preds  = torch.argmax(logits, dim=1).cpu().numpy()
-                    all_preds.append(preds)
-
-            pred_y = np.concatenate(all_preds)
-            print(f'Testing Accuracy: {accuracy_score(test_y, pred_y):.4f}')
-
-            print('More detailed results:')
-            print(classification_report(test_y, pred_y))
+        print('More detailed results:')
+        print(classification_report(test_y, pred_y))
 
     return net

@@ -32,6 +32,7 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
     training_watcher = TrainingWatcher()
     a1 = []
     a2 = []
+    grad_v = []
 
     for epoch in range(num_epochs):
         trainable.model.train()
@@ -40,9 +41,14 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
         if method == pb:
             train_loss, train_acc = perturbation_based_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
         else:
-            train_loss, train_acc, angle1, angle2 = feedback_alignment_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
+            train_loss, train_acc, angle1, angle2, grad_v = feedback_alignment_learning(trainable, train_loader, train_indices, epoch_idx=epoch)
             a1.append(np.mean(angle1))
             a2.append(np.mean(angle2))
+            mean_grad_v = np.mean(grad_v)
+            print(
+                f"Epoch: {epoch + 1}, Gradient Norm: {mean_grad_v:.4f}")
+            grad_v.append(mean_grad_v)
+
 
         trainable.scheduler.step()
         # Run one epoch of validation using standard validation method
@@ -70,5 +76,6 @@ def neuromorphic_training(trainable, batches_dataset, method, num_epochs=3):
         plt.ylim([0, 90])
         plt.xlim([1, MAX_EPOCHS])
         plt.show()
+
 
     return training_watcher.get_records()
