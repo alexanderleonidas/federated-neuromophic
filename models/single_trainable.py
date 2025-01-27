@@ -28,15 +28,22 @@ class Trainable:
 
 
     def support_dp_engine(self, dataset:DifferentialPrivacyDataset):
+
+        if self.state.fed_type == 'client':
+            epochs = MAX_EPOCHS * NUM_ROUNDS
+            delta = TARGET_DELTA / NUM_CLIENTS
+        else:
+            epochs = MAX_EPOCHS
+            delta = TARGET_DELTA
         engine = PrivacyEngine()
         model, optimizer, dataloader = engine.make_private_with_epsilon(
             module=self.model,
             optimizer=self.optimizer,
             data_loader=dataset.train_loader,
             max_grad_norm=MAX_GRAD_NORM,
-            epochs=MAX_EPOCHS,
+            epochs=epochs,
             target_epsilon=TARGET_EPSILON,
-            target_delta=TARGET_DELTA,
+            target_delta=delta,
         )
 
         self.model = model
